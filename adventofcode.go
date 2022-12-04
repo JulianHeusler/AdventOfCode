@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -9,7 +10,9 @@ import (
 )
 
 func main() {
-	day1.Solve(readInput(1))
+	resultPart1, resultPart2 := day1.Solve(readInput(1))
+	log.Printf("Part 1: %v\n", resultPart1)
+	log.Printf("Part 2: %v\n", resultPart2)
 }
 
 func readInput(day int) (lines []string) {
