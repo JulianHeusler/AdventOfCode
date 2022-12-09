@@ -43,18 +43,15 @@ func solvePart1(lines []string) int {
 
 func moveRope(rope *Rope, direction string, amount int) (visitedTailPositions []Position) {
 	for i := 0; i < amount; i++ {
+		oldPosition := rope.head
 		movePosition(&rope.head, direction, 1)
 		if IsNotTouching(rope.head, rope.tail) {
-			if getDistance(rope.head, rope.head) >= 2 {
-				// TODO digonal
-			}
-			movePosition(&rope.tail, direction, 1)
+			//movePosition(&rope.tail, direction, 1)
+			//if getDistance(rope.head, rope.tail) > math.Sqrt(2) {
+			// TODO digonal
+			rope.tail = Position{oldPosition.X, oldPosition.Y}
+			visitedTailPositions = append(visitedTailPositions, rope.tail)
 		}
-	}
-
-	for ok := true; ok; ok = IsNotTouching(rope.head, rope.tail) {
-		movePosition(&rope.tail, direction, 1)
-		visitedTailPositions = append(visitedTailPositions, rope.tail)
 	}
 	return visitedTailPositions
 }
@@ -73,7 +70,7 @@ func movePosition(position *Position, direction string, amount int) {
 }
 
 func IsNotTouching(head, tail Position) bool {
-	return head.X-tail.X > 1 || head.Y-tail.Y > 1
+	return math.Abs(float64(head.X-tail.X)) > 1 || math.Abs(float64(head.Y-tail.Y)) > 1
 }
 
 func getDistance(position1, position2 Position) float64 {
