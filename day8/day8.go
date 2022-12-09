@@ -8,73 +8,52 @@ type position struct {
 }
 
 func Solve(lines []string) (part1, part2 int) {
-
-	var visibleTrees []position
-
 	for y, line := range lines {
-		left := countVisibleTrees(line, y)
-		for _, t := range left {
-			visibleTrees = addTree(visibleTrees, t)
-		}
-		right := countVisibleTrees(reverse(line), y)
-		for _, t := range right {
-			t.x = len(line) + 1 - t.x
-			visibleTrees = addTree(visibleTrees, t)
-		}
-	}
-	for y, line := range RotateToLeft(lines) {
-		up := countVisibleTrees(line, y)
-		for _, t := range up {
-			visibleTrees = addTree(visibleTrees, t)
-		}
-		down := countVisibleTrees(reverse(line), y)
-		for _, t := range down {
-			t.x = len(line) + 1 - t.x
-			visibleTrees = addTree(visibleTrees, t)
-		}
-	}
-
-	return len(visibleTrees), 0
-}
-
-func addTree(trees []position, tree position) []position {
-	if !contains(trees, tree) {
-		trees = append(trees, tree)
-	}
-	return trees
-}
-
-func contains(trees []position, candidate position) bool {
-	for _, tree := range trees {
-		if tree == candidate {
-			return true
-		}
-	}
-	return false
-}
-
-func countVisibleTrees(line string, y int) (treePositions []position) {
-	highestTree := 0
-	for x := 0; x < len(line); x++ {
-		tree := getInt(line[x : x+1])
-		if isVisible(tree, highestTree) {
-			highestTree = tree
-			treePositions = append(treePositions, position{x: x + 1, y: y + 1})
-			if highestTree == 9 {
-				break
+		for x := 0; x < len(line); x++ {
+			tree := position{x: x, y: y}
+			treeIsVisible, senicScore := isTreeVisibleAndCalcScenicScore(tree, lines)
+			if treeIsVisible {
+				part1++
+			}
+			if part2 < senicScore {
+				part2 = senicScore
 			}
 		}
 	}
-	return treePositions
+	return part1, part2
+}
+
+func isTreeVisibleAndCalcScenicScore(tree position, lines []string) (bool, int) {
+	treeHeight := getInt(lines[tree.y][tree.x : tree.x+1])
+	lineLength := len(lines[tree.y])
+	column := getColumn(lines, tree.x)
+	columnLength := len(column)
+
+	rightCovered, visibleTreesRight := visibleTreesInLine(treeHeight, tree.x, lines[tree.y])
+	leftCovered, visibleTreesLeft := visibleTreesInLine(treeHeight, lineLength-1-tree.x, reverse(lines[tree.y]))
+	downCovered, visibleTreesDown := visibleTreesInLine(treeHeight, tree.y, column)
+	upCovered, visibleTreesUp := visibleTreesInLine(treeHeight, columnLength-1-tree.y, reverse(column))
+
+	treeIsVisible := !rightCovered || !leftCovered || !downCovered || !upCovered
+	scenicScore := visibleTreesRight * visibleTreesLeft * visibleTreesDown * visibleTreesUp
+	return treeIsVisible, scenicScore
+}
+
+func visibleTreesInLine(treeHeight, linePosition int, line string) (isCovered bool, count int) {
+	for i := linePosition + 1; i < len(line); i++ {
+		currentTree := getInt(line[i : i+1])
+		count++
+
+		if currentTree >= treeHeight {
+			return true, count
+		}
+	}
+	return false, count
 }
 
 func getInt(s string) int {
 	i, _ := strconv.Atoi(s)
 	return i
-}
-
-func isVisible(treeHeight, highestTree int) bool {
-	return treeHeight > highestTree
 }
 
 func reverse(s string) (result string) {
@@ -84,11 +63,11 @@ func reverse(s string) (result string) {
 	return result
 }
 
-func reverseSlice(slice []string) (result []string) {
-	for _, s := range slice {
-		result = append(result, reverse(s))
+func getColumn(lines []string, y int) (column string) {
+	for _, line := range lines {
+		column += line[y : y+1]
 	}
-	return result
+	return column
 }
 
 func RotateToLeft(lines []string) (rotated []string) {
@@ -101,59 +80,4 @@ func RotateToLeft(lines []string) (rotated []string) {
 		rotated = append(rotated, temp)
 	}
 	return rotated
-}
-
-func Solve2(lines []string) (part1, part2 int) {
-	for y, line := range lines {
-		for x := 0; x < len(line); x++ {
-			if isVisibleTree(position{x: x, y: y}, lines) {
-				part1++
-			} else {
-				part2++
-			}
-		}
-	}
-	return part1, 0
-}
-
-func isVisibleTree(tree position, lines []string) bool {
-	treeHeight := getInt(lines[tree.y][tree.x : tree.x+1])
-	//if treeHeight == 9 {
-	//	return true
-	//}
-
-	lastX := len(lines[tree.y])
-	// rightCovered
-	rightCovered := isCovered(treeHeight, tree.x, lines[tree.y])
-	leftCovered := isCovered(treeHeight, lastX-tree.x, reverse(lines[tree.y]))
-
-	//rotated := RotateToLeft(lines)
-	//t := len(rotated[tree.y])
-	lineLength := len(lines[tree.y]) - 1
-	downCovered := isCoveredVertical(treeHeight, tree.y, lines)
-	upCovered := isCoveredVertical(treeHeight, lineLength-tree.y, reverseSlice(lines))
-
-	result := !rightCovered || !leftCovered || !downCovered || !upCovered
-	return result
-}
-
-func isCovered(treeHeight, x int, line string) bool {
-	for i := x; i < len(line); i++ {
-		if getInt(line[i:i+1]) >= treeHeight {
-			return true
-		}
-	}
-	return false
-}
-
-func isCoveredVertical(treeHeight, y int, lines []string) bool {
-	for _, line := range lines {
-		if y >= len(line) || y <0 {
-			return false
-		}
-		if getInt(string(line[y])) >= treeHeight {
-			return true
-		}
-	}
-	return false
 }

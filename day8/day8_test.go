@@ -17,36 +17,32 @@ func TestSolve(t *testing.T) {
 		"35390",
 	}
 
-	resultPart1, resultPart2 := day8.Solve2(lines)
+	resultPart1, resultPart2 := day8.Solve(lines)
 	assert.Equal(t, 21, resultPart1)
-	assert.Equal(t, 0, resultPart2)
-}
+	assert.Equal(t, 8, resultPart2)
 
-func TestSolve2323(t *testing.T) {
-	lines := []string{
+	lines = []string{
 		"1111",
 		"1021",
 		"1111",
 	}
 
-	resultPart1, resultPart2 := day8.Solve2(lines)
+	resultPart1, resultPart2 = day8.Solve(lines)
 	assert.Equal(t, 11, resultPart1)
-	assert.Equal(t, 0, resultPart2)
-}
+	assert.Equal(t, 2, resultPart2)
 
-func TestSolve23323(t *testing.T) {
-	lines := []string{
+	lines = []string{
 		"123",
 		"456",
 		"789",
 	}
 
-	resultPart1, resultPart2 := day8.Solve2(lines)
+	resultPart1, resultPart2 = day8.Solve(lines)
 	assert.Equal(t, 9, resultPart1)
-	assert.Equal(t, 0, resultPart2)
+	assert.Equal(t, 1, resultPart2)
 }
 
-func TestSolve999(t *testing.T) {
+func TestSolve9(t *testing.T) {
 	lines := []string{
 		"999",
 		"999",
@@ -54,9 +50,9 @@ func TestSolve999(t *testing.T) {
 		"999",
 	}
 
-	resultPart1, resultPart2 := day8.Solve2(lines)
-	assert.Equal(t, 11, resultPart1)
-	assert.Equal(t, 0, resultPart2)
+	resultPart1, resultPart2 := day8.Solve(lines)
+	assert.Equal(t, 10, resultPart1)
+	assert.Equal(t, 1, resultPart2)
 }
 
 func TestRotate(t *testing.T) {
@@ -99,7 +95,7 @@ func TestRotate(t *testing.T) {
 }
 
 func TestSolveRealInput(t *testing.T) {
-	resultPart1, resultPart2 := day8.Solve2(reader.ReadInput(8, false))
-	assert.Equal(t, 1840, resultPart1)
-	assert.Equal(t, 0, resultPart2)
+	resultPart1, resultPart2 := day8.Solve(reader.ReadInput(8, false))
+	assert.Equal(t, 1789, resultPart1)
+	assert.Equal(t, 314820, resultPart2)
 }
