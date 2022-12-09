@@ -22,41 +22,74 @@ type MoveAction struct {
 }
 
 func Solve(lines []string) (part1, part2 int) {
-
-	return solvePart1(lines), 0
+	return calcVisitedPositions(lines, 2), calcVisitedPositions(lines, 10)
 }
 
-func solvePart1(lines []string) int {
-	rope := Rope{Position{0, 0}, Position{0, 0}}
+func calcVisitedPositions(lines []string, ropeSize int) int {
+	rope := createRope(ropeSize)
 	var visitedTailPositions []Position
-	visitedTailPositions = append(visitedTailPositions, rope.tail) // inital position
+	visitedTailPositions = append(visitedTailPositions, rope[0]) // inital position
 
 	for _, line := range lines {
 		splitted := strings.Split(line, " ")
 		direction := splitted[0]
 		amount := splitted[1]
-		visitedTailPositions = append(visitedTailPositions, moveRope(&rope, direction, getInt(amount))...)
+		visitedTailPositions = append(visitedTailPositions, moveRope(rope, direction, getInt(amount))...)
 	}
 
 	return countUniquePositions(visitedTailPositions)
 }
 
-func moveRope(rope *Rope, direction string, amount int) (visitedTailPositions []Position) {
+func createRope(size int) (rope []Position) {
+	for i := 0; i < size; i++ {
+		rope = append(rope, Position{0, 0})
+	}
+	return rope
+}
+
+func moveRope(rope []Position, direction string, amount int) (visitedTailPositions []Position) {
 	for i := 0; i < amount; i++ {
-		oldPosition := rope.head
-		movePosition(&rope.head, direction, 1)
-		if IsNotTouching(rope.head, rope.tail) {
-			//movePosition(&rope.tail, direction, 1)
-			//if getDistance(rope.head, rope.tail) > math.Sqrt(2) {
-			// TODO digonal
-			rope.tail = Position{oldPosition.X, oldPosition.Y}
-			visitedTailPositions = append(visitedTailPositions, rope.tail)
+		for knotIndex := 0; knotIndex < len(rope); knotIndex++ {
+			if knotIndex == 0 {
+				rope[0] = movePosition(rope[0], direction, 1)
+			} else {
+				if IsNotTouching(rope[knotIndex-1], rope[knotIndex]) {
+					//if getDistance(rope[knotIndex-1], rope[knotIndex]) == 2 {
+					//	rope[knotIndex] = movePosition(rope[knotIndex], direction, 1)
+					//} else {
+						rope[knotIndex] = temp(rope, knotIndex) // diagonal
+					//}
+					if knotIndex == len(rope)-1 {
+						visitedTailPositions = append(visitedTailPositions, rope[knotIndex])
+					}
+				}
+			}
 		}
 	}
 	return visitedTailPositions
 }
 
-func movePosition(position *Position, direction string, amount int) {
+func temp(rope []Position, index int) Position {
+	prev := rope[index-1]
+	curr := rope[index]
+
+	dx := (prev.X - curr.X)
+	dy := (prev.Y - curr.Y)
+
+	return Position{X: curr.X + sgn(dx), Y: curr.Y + sgn(dy)}
+}
+
+func sgn(a int) int {
+	switch {
+	case a < 0:
+		return -1
+	case a > 0:
+		return +1
+	}
+	return 0
+}
+
+func movePosition(position Position, direction string, amount int) Position {
 	switch direction {
 	case "R":
 		position.X += amount
@@ -67,6 +100,7 @@ func movePosition(position *Position, direction string, amount int) {
 	case "D":
 		position.Y -= amount
 	}
+	return position
 }
 
 func IsNotTouching(head, tail Position) bool {
@@ -78,12 +112,13 @@ func getDistance(position1, position2 Position) float64 {
 }
 
 func countUniquePositions(positions []Position) (count int) {
-	for index, position := range positions {
-		if !contains(positions[index+1:], position) {
-			count++
+	var set []Position
+	for i := 0; i < len(positions); i++ {
+		if !contains(set, positions[i]) {
+			set = append(set, positions[i])
 		}
 	}
-	return count
+	return len(set)
 }
 
 func contains(positions []Position, candidate Position) bool {
