@@ -18,7 +18,38 @@ func TestSolve1(t *testing.T) {
 	}
 
 	resultPart1, resultPart2 := day7.Solve(lines)
-	assert.Equal(t, 14848514+8504156, resultPart1)
+	assert.Equal(t, 0, resultPart1)
+	assert.Equal(t, 0, resultPart2)
+}
+
+func TestSolve2(t *testing.T) {
+	lines := []string{
+		"$ cd /",
+		"$ ls",
+		"dir a",
+		"$ cd a",
+		"$ ls",
+		"100000 b.txt",
+	}
+
+	resultPart1, resultPart2 := day7.Solve(lines)
+	assert.Equal(t, 200000, resultPart1)
+	assert.Equal(t, 0, resultPart2)
+
+	lines = []string{
+		"$ cd /",
+		"$ ls",
+		"dir a",
+		"$ cd a",
+		"$ ls",
+		"dir b",
+		"$ cd b",
+		"$ ls",
+		"100000 b.txt",
+	}
+
+	resultPart1, resultPart2 = day7.Solve(lines)
+	assert.Equal(t, 300000, resultPart1)
 	assert.Equal(t, 0, resultPart2)
 }
 
@@ -50,12 +81,12 @@ func TestSolve(t *testing.T) {
 	}
 
 	resultPart1, resultPart2 := day7.Solve(lines)
-	assert.Equal(t, 48381165, resultPart1)
+	assert.Equal(t, 95437, resultPart1)
 	assert.Equal(t, 0, resultPart2)
 }
 
 func TestSolveRealInput(t *testing.T) {
-	resultPart1, resultPart2 := day7.Solve(reader.ReadInput(5, false))
-	assert.Equal(t, "DHBJQJCCW", resultPart1)
-	assert.Equal(t, "WJVRLSJJT", resultPart2)
+	resultPart1, resultPart2 := day7.Solve(reader.ReadInput(7, false))
+	assert.Equal(t, 1447046, resultPart1)
+	assert.Equal(t, 578710, resultPart2)
 }
