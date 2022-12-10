@@ -6,19 +6,9 @@ import (
 	"strings"
 )
 
-type Rope struct {
-	head Position
-	tail Position
-}
-
 type Position struct {
 	X int
 	Y int
-}
-
-type MoveAction struct {
-	direction string
-	amount    int
 }
 
 func Solve(lines []string) (part1, part2 int) {
@@ -28,7 +18,7 @@ func Solve(lines []string) (part1, part2 int) {
 func calcVisitedPositions(lines []string, ropeSize int) int {
 	rope := createRope(ropeSize)
 	var visitedTailPositions []Position
-	visitedTailPositions = append(visitedTailPositions, rope[0]) // inital position
+	visitedTailPositions = append(visitedTailPositions, rope[0]) // add inital position
 
 	for _, line := range lines {
 		splitted := strings.Split(line, " ")
@@ -48,35 +38,36 @@ func createRope(size int) (rope []Position) {
 }
 
 func moveRope(rope []Position, direction string, amount int) (visitedTailPositions []Position) {
-	for i := 0; i < amount; i++ {
-		for knotIndex := 0; knotIndex < len(rope); knotIndex++ {
-			if knotIndex == 0 {
-				rope[0] = movePosition(rope[0], direction, 1)
-			} else {
-				if IsNotTouching(rope[knotIndex-1], rope[knotIndex]) {
-					//if getDistance(rope[knotIndex-1], rope[knotIndex]) == 2 {
-					//	rope[knotIndex] = movePosition(rope[knotIndex], direction, 1)
-					//} else {
-						rope[knotIndex] = temp(rope, knotIndex) // diagonal
-					//}
-					if knotIndex == len(rope)-1 {
-						visitedTailPositions = append(visitedTailPositions, rope[knotIndex])
-					}
-				}
+	for step := 0; step < amount; step++ {
+		movePosition(&rope[0], direction)
+		visitedTailPositions = append(visitedTailPositions, moveKnots(rope, direction)...)
+	}
+	return visitedTailPositions
+}
+
+func moveKnots(rope []Position, direction string) (visitedTailPositions []Position) {
+	var current *Position
+	var previous *Position
+	for knotIndex := 1; knotIndex < len(rope); knotIndex++ {
+		current = &rope[knotIndex]
+		previous = &rope[knotIndex-1]
+
+		if IsNotTouching(*current, *previous) {
+			clacNewPosition(current, previous)
+			if knotIndex == len(rope)-1 { // is tail
+				visitedTailPositions = append(visitedTailPositions, *current)
 			}
 		}
 	}
 	return visitedTailPositions
 }
 
-func temp(rope []Position, index int) Position {
-	prev := rope[index-1]
-	curr := rope[index]
-
+func clacNewPosition(curr, prev *Position) {
 	dx := (prev.X - curr.X)
 	dy := (prev.Y - curr.Y)
 
-	return Position{X: curr.X + sgn(dx), Y: curr.Y + sgn(dy)}
+	curr.X += sgn(dx)
+	curr.Y += sgn(dy)
 }
 
 func sgn(a int) int {
@@ -89,33 +80,28 @@ func sgn(a int) int {
 	return 0
 }
 
-func movePosition(position Position, direction string, amount int) Position {
+func movePosition(position *Position, direction string) {
 	switch direction {
 	case "R":
-		position.X += amount
+		position.X++
 	case "L":
-		position.X -= amount
+		position.X--
 	case "U":
-		position.Y += amount
+		position.Y++
 	case "D":
-		position.Y -= amount
+		position.Y--
 	}
-	return position
 }
 
 func IsNotTouching(head, tail Position) bool {
 	return math.Abs(float64(head.X-tail.X)) > 1 || math.Abs(float64(head.Y-tail.Y)) > 1
 }
 
-func getDistance(position1, position2 Position) float64 {
-	return math.Sqrt(math.Pow(float64(position2.X-position1.X), 2) + math.Pow(float64(position2.Y-position1.Y), 2))
-}
-
-func countUniquePositions(positions []Position) (count int) {
+func countUniquePositions(positions []Position) int {
 	var set []Position
-	for i := 0; i < len(positions); i++ {
-		if !contains(set, positions[i]) {
-			set = append(set, positions[i])
+	for _, position := range positions {
+		if !contains(set, position) {
+			set = append(set, position)
 		}
 	}
 	return len(set)

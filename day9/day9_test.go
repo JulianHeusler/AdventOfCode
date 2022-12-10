@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSolve(t *testing.T) {
+func TestSolvePart1(t *testing.T) {
 	lines := []string{
 		"R 4",
 		"U 4",
@@ -20,9 +20,8 @@ func TestSolve(t *testing.T) {
 		"R 2",
 	}
 
-	resultPart1, resultPart2 := day9.Solve(lines)
+	resultPart1, _ := day9.Solve(lines)
 	assert.Equal(t, 13, resultPart1)
-	assert.Equal(t, 1, resultPart2)
 }
 
 func TestSolvePart2(t *testing.T) {
@@ -42,18 +41,16 @@ func TestSolvePart2(t *testing.T) {
 }
 
 func TestTouching(t *testing.T) {
-	assert.True(t, day9.IsNotTouching(day9.Position{1, 0}, day9.Position{0, 0}))
-
 	for x := -1; x <= 1; x++ {
 		for y := -1; y <= 1; y++ {
-			assert.True(t, day9.IsNotTouching(day9.Position{x, y}, day9.Position{0, 0}))
-			assert.True(t, day9.IsNotTouching(day9.Position{0, 0}, day9.Position{x, y}))
+			assert.False(t, day9.IsNotTouching(day9.Position{x, y}, day9.Position{0, 0}))
+			assert.False(t, day9.IsNotTouching(day9.Position{0, 0}, day9.Position{x, y}))
 		}
 	}
 
 	for i := 2; i <= 4; i++ {
-		assert.False(t, day9.IsNotTouching(day9.Position{i, 0}, day9.Position{0, 0}))
-		assert.False(t, day9.IsNotTouching(day9.Position{0, i}, day9.Position{0, 0}))
+		assert.True(t, day9.IsNotTouching(day9.Position{i, 0}, day9.Position{0, 0}))
+		assert.True(t, day9.IsNotTouching(day9.Position{0, i}, day9.Position{0, 0}))
 	}
 }
 
