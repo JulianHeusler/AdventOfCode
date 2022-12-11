@@ -1,123 +1,100 @@
 package day11
 
 import (
-	"fmt"
-	"regexp"
+	"adventofcode/util"
 	"sort"
-	"strconv"
-	"strings"
 )
 
-type monkey struct {
+type Monkey struct {
 	items               []int
-	operation           string
-	divisibilityTest    int
+	operation           Operation
+	dividesBy           int
 	targetTrue          int
 	targetFalse         int
 	inspectedItemsCount int
 }
 
+type Operation func(input int) int
+
 func Solve(lines []string) (part1, part2 int) {
 	monkeys := parseMonkeys(lines)
-	fmt.Println(monkeys)
+	monkeysCopy := make([]Monkey, len(monkeys))
+	copy(monkeysCopy, monkeys)
 
-	for round := 0; round < 20; round++ {
-		for i, m := range monkeys {
-			for _, item := range m.items {
-				newWorryLevel := executeOperation(m.operation, item)
-				newWorryLevel = int(newWorryLevel / 3)
-				if newWorryLevel%m.divisibilityTest == 0 {
-					monkeys[m.targetTrue].items = append(monkeys[m.targetTrue].items, newWorryLevel)
+	return simulateMonkeyInTheMiddle(monkeys, 20,
+			func(level int) int {
+				return int(level / 3)
+			}),
+		simulateMonkeyInTheMiddle(monkeysCopy, 10000,
+			func(level int) int {
+				return level % calcLeastCommonMultiple(monkeys)
+			})
+}
+
+func simulateMonkeyInTheMiddle(monkeys []Monkey, rounds int, reduceWorryLevel Operation) int {
+	for round := 0; round < rounds; round++ {
+		for i, monkey := range monkeys {
+			for _, item := range monkey.items {
+				newWorryLevel := monkey.operation(item)
+				newWorryLevel = reduceWorryLevel(newWorryLevel)
+				if newWorryLevel%monkey.dividesBy == 0 {
+					monkeys[monkey.targetTrue].items = append(monkeys[monkey.targetTrue].items, newWorryLevel)
 				} else {
-					monkeys[m.targetFalse].items = append(monkeys[m.targetFalse].items, newWorryLevel)
+					monkeys[monkey.targetFalse].items = append(monkeys[monkey.targetFalse].items, newWorryLevel)
 				}
 				monkeys[i].inspectedItemsCount++
 			}
 			monkeys[i].items = []int{}
 		}
 	}
-
-	return getResult(monkeys), 0
+	return calcMonkeyBusiness(monkeys)
 }
 
-func getResult(monkeys []monkey) int {
+func calcLeastCommonMultiple(monkeys []Monkey) int {
+	kgv := 1
+	for _, monkey := range monkeys {
+		kgv *= monkey.dividesBy
+	}
+	return kgv
+}
+
+func calcMonkeyBusiness(monkeys []Monkey) int {
 	sort.SliceStable(monkeys, func(i, j int) bool {
 		return monkeys[i].inspectedItemsCount > monkeys[j].inspectedItemsCount
 	})
-
 	return monkeys[0].inspectedItemsCount * monkeys[1].inspectedItemsCount
 }
 
-func parseMonkeys(lines []string) (monkeys []monkey) {
+func parseMonkeys(lines []string) (monkeys []Monkey) {
 	for lineNumber := 0; lineNumber < len(lines); lineNumber += 7 {
-		newMonkey := monkey{
-			items:            parseStartingItems(lines[lineNumber+1]),
-			operation:        parseOperation(lines[lineNumber+2]),
-			divisibilityTest: parseDivisibilityTest(lines[lineNumber+3]),
-			targetTrue:       parseTargetTrue(lines[lineNumber+4]),
-			targetFalse:      parseTargetFalse(lines[lineNumber+5]),
+		newMonkey := Monkey{
+			items:       util.FindIntSlice(lines[lineNumber+1], `Starting items: (.+)`, ", "),
+			operation:   parseOperation(util.FindStringSubmatch(lines[lineNumber+2], `Operation: (.+)`)[1]),
+			dividesBy:   util.FindFirstInt(lines[lineNumber+3], `Test: divisible by (\d+)`),
+			targetTrue:  util.FindFirstInt(lines[lineNumber+4], `If true: throw to monkey (\d+)`),
+			targetFalse: util.FindFirstInt(lines[lineNumber+5], `If false: throw to monkey (\d+)`),
 		}
 		monkeys = append(monkeys, newMonkey)
 	}
-
 	return monkeys
 }
 
-func parseStartingItems(line string) (startingItems []int) {
-	regexStartingItems := regexp.MustCompile(`Starting items: (.+)`)
-	items := strings.Split(regexStartingItems.FindStringSubmatch(line)[1], ", ")
-	for _, item := range items {
-		startingItems = append(startingItems, getInt(item))
-	}
-	return startingItems
-}
-
-func parseOperation(line string) string {
-	regex := regexp.MustCompile(`Operation: (.+)`)
-	return regex.FindStringSubmatch(line)[1]
-}
-
-func parseDivisibilityTest(line string) int {
-	regex := regexp.MustCompile(`Test: divisible by (\d+)`)
-	return getInt(regex.FindStringSubmatch(line)[1])
-}
-
-func parseTargetTrue(line string) int {
-	regex := regexp.MustCompile(`If true: throw to monkey (\d+)`)
-	return getInt(regex.FindStringSubmatch(line)[1])
-}
-
-func parseTargetFalse(line string) int {
-	regex := regexp.MustCompile(`If false: throw to monkey (\d+)`)
-	return getInt(regex.FindStringSubmatch(line)[1])
-}
-
-func executeOperation(operation string, worryLevel int) int {
-	regex := regexp.MustCompile(`new = old (.) (\d+)`)
-	match := regex.FindStringSubmatch(operation)
-
-	if len(match) != 0 {
+func parseOperation(operationString string) Operation {
+	match := util.FindStringSubmatch(operationString, `new = old (.) (\d+)`)
+	if match != nil {
 		operator := match[1]
-		value := getInt(match[2])
+		value := util.GetInt(match[2])
 		if operator == "*" {
-			return worryLevel * value
+			return func(worryLevel int) int { return worryLevel * value }
 		} else {
-			return worryLevel + value
+			return func(worryLevel int) int { return worryLevel + value }
 		}
 	}
-
-	regex2 := regexp.MustCompile(`new = old (.) old`)
-	match2 := regex2.FindStringSubmatch(operation)
-	operator := match2[1]
-
+	match = util.FindStringSubmatch(operationString, `new = old (.) old`)
+	operator := match[1]
 	if operator == "*" {
-		return worryLevel * worryLevel
+		return func(worryLevel int) int { return worryLevel * worryLevel }
 	} else {
-		return worryLevel + worryLevel
+		return func(worryLevel int) int { return worryLevel + worryLevel }
 	}
-}
-
-func getInt(s string) int {
-	i, _ := strconv.Atoi(s)
-	return i
 }
