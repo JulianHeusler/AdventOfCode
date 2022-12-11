@@ -3,7 +3,6 @@ package day7
 import (
 	"fmt"
 	"math"
-	"reflect"
 	"strconv"
 	"strings"
 )
@@ -21,14 +20,16 @@ type file struct {
 	size int
 }
 
+var uniqueDirs []*directory
+
 func Solve(lines []string) (part1, part2 int) {
-	return solvePart1(lines)
+	root := parseDirectorys(lines)
+	return solvePart1(), solvePart2(root.size)
 }
 
-func solvePart1(lines []string) (int, int) {
-	var currentDir *directory
+func parseDirectorys(lines []string) directory {
 	root := &directory{name: "/"}
-	currentDir = root
+	currentDir := root
 
 	for _, line := range lines {
 		if strings.HasPrefix(line, "$") {
@@ -36,9 +37,7 @@ func solvePart1(lines []string) (int, int) {
 				if line == "$ cd .." {
 					currentDir = currentDir.parent
 				} else {
-					if currentDir != nil {
-						currentDir = openDirHere(currentDir, line[5:])
-					}
+					currentDir = openSubDirectory(currentDir, line[5:])
 				}
 			}
 			// $ ls - does nothing
@@ -46,23 +45,25 @@ func solvePart1(lines []string) (int, int) {
 			if strings.HasPrefix(line, "dir") {
 				subdir := &directory{name: line[4:], parent: currentDir}
 				currentDir.subDirectorys = append(currentDir.subDirectorys, subdir)
-				dirs = append(dirs, subdir)
+				uniqueDirs = append(uniqueDirs, subdir)
 			} else {
-				splitted := strings.Split(line, " ")
-				fileName := splitted[1]
-				fileSize, _ := strconv.Atoi(splitted[0])
-				currentDir.files = append(currentDir.files, &file{name: fileName, size: fileSize})
-				//currentDir.size += fileSize
+				currentDir.files = append(currentDir.files, parseFile(line))
 			}
 		}
 	}
 
-	calcSize(root)
-	fmt.Println(root)
-	return part1(root), part2(root)
+	calcDirectorySizes(root)
+	return *root
 }
 
-func openDirHere(current *directory, name string) *directory {
+func parseFile(line string) *file {
+	splitted := strings.Split(line, " ")
+	fileName := splitted[1]
+	fileSize, _ := strconv.Atoi(splitted[0])
+	return &file{name: fileName, size: fileSize}
+}
+
+func openSubDirectory(current *directory, name string) *directory {
 	for _, sub := range current.subDirectorys {
 		if sub.name == name {
 			return sub
@@ -72,35 +73,21 @@ func openDirHere(current *directory, name string) *directory {
 	return current
 }
 
-func contains(dirs []*directory, candidate *directory) bool {
-	for _, dir := range dirs {
-		if reflect.DeepEqual(dir, candidate) {
-			fmt.Println(candidate)
-			return true
+func solvePart1() (x int) {
+	for _, dir := range uniqueDirs {
+		if dir.size <= 100000 {
+			x += dir.size
 		}
-	}
-	return false
-}
-
-func part1(dir *directory) (x int) {
-	for _, sub := range dir.subDirectorys {
-		x += part1(sub)
-	}
-
-	if dir.size <= 100000 {
-		x += dir.size
 	}
 	return x
 }
 
-func part2(root *directory) (minimumFittingSize int) {
-	const filesystemSize = 70000000
-	const updateNeededSpace = 30000000
-	freeSpace := filesystemSize - root.size
-	neededSpace := updateNeededSpace - freeSpace
+func solvePart2(rootSize int) (minimumFittingSize int) {
+	freeSpace := 70000000 - rootSize
+	neededSpace := 30000000 - freeSpace
 	minimumFittingSize = math.MaxInt
 
-	for _, dir := range dirs {
+	for _, dir := range uniqueDirs {
 		if dir.size >= neededSpace {
 			if dir.size < minimumFittingSize {
 				minimumFittingSize = dir.size
@@ -110,44 +97,13 @@ func part2(root *directory) (minimumFittingSize int) {
 	return minimumFittingSize
 }
 
-func openDir(name string, root *directory) *directory {
-	b, d := findDir(root, name)
-	if !b {
-		fmt.Println("Error")
-	}
-	return d
-}
-
-func findDir(current *directory, name string) (found bool, d *directory) {
-	if current.name == name {
-		return true, current
-	}
-
-	for _, sub := range current.subDirectorys {
-		found2, d2 := findDir(sub, name)
-		if found2 {
-			return true, d2
-		}
-	}
-
-	return false, &directory{}
-}
-
-var dirs []*directory
-
-func calcSize(dir *directory) (size int) {
+func calcDirectorySizes(dir *directory) (size int) {
 	for _, sub := range dir.subDirectorys {
-		size += calcSize(sub)
+		size += calcDirectorySizes(sub)
 	}
-
 	for _, file := range dir.files {
 		size += file.size
 	}
-
 	dir.size = size
-
-	if !contains(dirs, dir) {
-		dirs = append(dirs, dir)
-	}
 	return size
 }
