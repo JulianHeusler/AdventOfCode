@@ -1,0 +1,32 @@
+package day12_test
+
+import (
+	"adventofcode/day12"
+	"adventofcode/reader"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestSolve(t *testing.T) {
+	lines := []string{
+		"R 5",
+		"U 8",
+		"L 8",
+		"D 3",
+		"R 17",
+		"D 10",
+		"L 25",
+		"U 20",
+	}
+
+	resultPart1, resultPart2 := day12.Solve(lines)
+	assert.Equal(t, 31, resultPart1)
+	assert.Equal(t, 0, resultPart2)
+}
+
+func TestSolveRealInput(t *testing.T) {
+	resultPart1, resultPart2 := day12.Solve(reader.ReadInput(12, false))
+	assert.Equal(t, 0, resultPart1)
+	assert.Equal(t, 0, resultPart2)
+}
