@@ -10,14 +10,11 @@ import (
 
 func TestSolve(t *testing.T) {
 	lines := []string{
-		"R 5",
-		"U 8",
-		"L 8",
-		"D 3",
-		"R 17",
-		"D 10",
-		"L 25",
-		"U 20",
+		"Sabqponm",
+		"abcryxxl",
+		"accszExk",
+		"acctuvwj",
+		"abdefghi",
 	}
 
 	resultPart1, resultPart2 := day12.Solve(lines)
