@@ -1,0 +1,38 @@
+string[x][y] heightmap
+
+Breitensuche
+
+bool[][] travesedMap
+
+Position
+    x
+    y
+
+Position[] add startPos
+
+while true both lists not emtpy
+    if curr emtpy
+        curr  = nextList
+        nextlist = 0
+        counter++
+
+
+   curr pop currList
+
+
+    if curr.traveres == true
+        continue
+
+    fir each direction
+        !existS ? outofbound?
+            continue
+
+       ! is not travered?
+            continue
+
+       ! can be stepped on ? smaller, equal or +1
+            continue
+
+        if reached goal
+            return counter
+        else add to pos nextlist
