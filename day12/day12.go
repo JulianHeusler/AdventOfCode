@@ -1,7 +1,6 @@
 package day12
 
 import (
-	"fmt"
 	"math"
 )
 
@@ -15,23 +14,30 @@ func Solve(lines []string) (part1, part2 int) {
 	start := findSymbolPositions('S', heightMap)
 	goal := findSymbolPositions('E', heightMap)
 	lowStartingPoints := findSymbolPositions('a', heightMap)
-	return solvePart1(heightMap, start[0], goal[0]), solvePart2(heightMap, append(start, lowStartingPoints...), goal[0])
+
+	part1 = solvePart1(heightMap, start[0], goal[0])
+	return part1, solvePart2(heightMap, lowStartingPoints, goal[0], part1)
 }
 
 func solvePart1(heightMap [][]rune, start, goal Position) int {
 	currentPositions := []Position{start}
+	initVisited(heightMap)
 	setVisited(start)
-	return search(heightMap, currentPositions, goal) - 1
+	_, pathLength := search(heightMap, currentPositions, goal)
+	return pathLength - 1
 }
 
-func solvePart2(heightMap [][]rune, startPositions []Position, goal Position) int {
-	var pathLengths []int
-	// reset visited
+func solvePart2(heightMap [][]rune, startPositions []Position, goal Position, part1 int) int {
+	pathLengths := []int{part1}
 
 	for _, start := range startPositions {
-		//currentPositions := []Position{start}
+		currentPositions := []Position{start}
+		initVisited(heightMap)
 		setVisited(start)
-		// pathLengths = append(pathLengths, search(heightMap, currentPositions, goal)-1)
+		found, pathLength := search(heightMap, currentPositions, goal)
+		if found {
+			pathLengths = append(pathLengths, pathLength-1)
+		}
 	}
 
 	return getMinimum(pathLengths)
@@ -40,7 +46,7 @@ func solvePart2(heightMap [][]rune, startPositions []Position, goal Position) in
 func getMinimum(pathLengths []int) int {
 	minimum := math.MaxInt
 	for _, pathLength := range pathLengths {
-		if pathLength < minimum {
+		if pathLength < minimum && pathLength > 0 {
 			minimum = pathLength
 		}
 	}
@@ -49,12 +55,12 @@ func getMinimum(pathLengths []int) int {
 
 var visited [][]bool
 
-func search(heightMap [][]rune, currentPositions []Position, goal Position) (pathLength int) {
+func search(heightMap [][]rune, currentPositions []Position, goal Position) (found bool, pathLength int) {
 	var possibleNextPositions []Position
 	pathLength++
 	for _, current := range currentPositions {
 		if current == goal {
-			return pathLength
+			return true, pathLength
 		}
 		// already visited?
 		//if !notVisited(current) {
@@ -64,7 +70,12 @@ func search(heightMap [][]rune, currentPositions []Position, goal Position) (pat
 		possibleNextPositions = append(possibleNextPositions, createNextPositionForEachDirection(heightMap, current)...)
 	}
 
-	return pathLength + search(heightMap, possibleNextPositions, goal)
+	if len(possibleNextPositions) == 0 {
+		return false, -1
+	}
+
+	found2, pathLength2 := search(heightMap, possibleNextPositions, goal)
+	return found2, pathLength + pathLength2
 }
 
 func createNextPositionForEachDirection(heightMap [][]rune, current Position) (nextValidPositions []Position) {
@@ -121,14 +132,18 @@ func isNotToHigh(currentHeight, nextHeight rune) bool {
 	return nextHeight <= r
 }
 
+func initVisited(heightMap [][]rune) {
+	visited = make([][]bool, len(heightMap))
+	for y, line := range heightMap {
+		visited[y] = make([]bool, len(line))
+	}
+}
+
 // could also use are real map instead of slices
 func parseHeightMap(lines []string) (heightMap [][]rune) {
 	heightMap = make([][]rune, len(lines))
-	visited = make([][]bool, len(lines))
-
 	for y, line := range lines {
 		heightMap[y] = make([]rune, len(line))
-		visited[y] = make([]bool, len(line))
 		for x, letter := range line {
 			heightMap[y][x] = letter
 		}
