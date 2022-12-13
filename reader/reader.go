@@ -3,23 +3,26 @@ package reader
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 )
 
 func ReadExampleInput(day int) (lines []string) {
-	return readFile(getFilePath(day, false, "example"))
+	return readFile(getFilePath(day, "example"))
 }
 
-func ReadInput(day int, isRootDir bool) (lines []string) {
-	return readFile(getFilePath(day, isRootDir, "input"))
+func ReadInput(day int) (lines []string) {
+	return readFile(getFilePath(day, "input"))
 }
 
-func getFilePath(day int, isRootDir bool, filename string) string {
-	if isRootDir {
-		return fmt.Sprintf("day%d/%s.txt", day, filename)
-	} else {
-		return fmt.Sprintf("../day%d/%s.txt", day, filename)
-	}
+func getFilePath(day int, filename string) string {
+	return fmt.Sprintf("%s\\day%d\\%s.txt", getProjectDirectoryPath(), day, filename)
+}
+
+func getProjectDirectoryPath() string {
+	_, currentFile, _, _ := runtime.Caller(0)
+	return filepath.Join(filepath.Dir(currentFile), "../")
 }
 
 func readFile(filepath string) (lines []string) {

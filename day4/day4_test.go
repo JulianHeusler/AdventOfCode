@@ -24,7 +24,7 @@ func TestSolve(t *testing.T) {
 }
 
 func TestSolveRealInput(t *testing.T) {
-	resultPart1, resultPart2 := day4.Solve(reader.ReadInput(4, false))
+	resultPart1, resultPart2 := day4.Solve(reader.ReadInput(4))
 	assert.Equal(t, 513, resultPart1)
 	assert.Equal(t, 878, resultPart2)
 }

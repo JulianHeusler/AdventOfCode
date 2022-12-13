@@ -55,7 +55,7 @@ func TestTouching(t *testing.T) {
 }
 
 func TestSolveRealInput(t *testing.T) {
-	resultPart1, resultPart2 := day9.Solve(reader.ReadInput(9, false))
+	resultPart1, resultPart2 := day9.Solve(reader.ReadInput(9))
 	assert.Equal(t, 6745, resultPart1)
 	assert.Equal(t, 2793, resultPart2)
 }

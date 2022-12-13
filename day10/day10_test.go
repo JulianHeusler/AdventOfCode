@@ -165,7 +165,7 @@ func TestSolve(t *testing.T) {
 }
 
 func TestSolveRealInput(t *testing.T) {
-	resultPart1, resultPart2 := day10.Solve(reader.ReadInput(10, false))
+	resultPart1, resultPart2 := day10.Solve(reader.ReadInput(10))
 	expectedPart2 := "###..#....###...##..####.###...##..#....#..#.#....#..#.#..#.#....#..#.#..#.#....#..#.#....#..#.#..#.###..###..#....#....###..#....###..####.#....#..#.#....#....#....#....#....#..#.#....#..#.#..#.#....#....####.#....#..#.#....###...##..####."
 	assert.Equal(t, 12560, resultPart1)
 	assert.Equal(t, expectedPart2, resultPart2)
