@@ -33,8 +33,8 @@ func TestSolve2(t *testing.T) {
 	}
 
 	resultPart1, resultPart2 := day7.Solve(lines)
-	assert.Equal(t, 200000, resultPart1)
-	assert.Equal(t, 0, resultPart2)
+	assert.Equal(t, 100000, resultPart1)
+	assert.Equal(t, 100000, resultPart2)
 
 	lines = []string{
 		"$ cd /",
@@ -49,7 +49,7 @@ func TestSolve2(t *testing.T) {
 	}
 
 	resultPart1, resultPart2 = day7.Solve(lines)
-	assert.Equal(t, 300000, resultPart1)
+	assert.Equal(t, 200000, resultPart1)
 	assert.Equal(t, 100000, resultPart2)
 }
 

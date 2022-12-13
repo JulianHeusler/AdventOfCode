@@ -23,6 +23,7 @@ type file struct {
 var uniqueDirs []*directory
 
 func Solve(lines []string) (part1, part2 int) {
+	uniqueDirs = nil
 	root := parseDirectorys(lines)
 	return solvePart1(), solvePart2(root.size)
 }
