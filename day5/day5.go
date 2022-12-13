@@ -16,15 +16,16 @@ type instruction struct {
 func Solve(lines []string) (part1, part2 string) {
 	InitStacks((len(lines[0]) + 1) / 4)
 
-	var stackLines []string
+	stackLineIndex := 0
 	for _, line := range lines {
-		stackLines = append(stackLines, line)
+		stackLineIndex++
 		if line == "" {
 			break
 		}
 	}
-	stackLines = stackLines[:len(stackLines)-2] // remove filler lines
-	instructions := parseInstructions(lines[len(stackLines):])
+
+	stackLines := lines[:stackLineIndex-2] // remove filler lines
+	instructions := parseInstructions(lines[stackLineIndex:])
 
 	return solvePart1(stackLines, instructions), solvePart2(stackLines, instructions)
 }
