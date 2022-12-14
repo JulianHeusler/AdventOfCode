@@ -16,11 +16,11 @@ func TestSolve(t *testing.T) {
 
 	resultPart1, resultPart2 := day14.Solve(lines)
 	assert.Equal(t, 24, resultPart1)
-	assert.Equal(t, 0, resultPart2)
+	assert.Equal(t, 93, resultPart2)
 }
 
 func TestSolveRealInput(t *testing.T) {
 	resultPart1, resultPart2 := day14.Solve(reader.ReadInput(14))
 	assert.Equal(t, 696, resultPart1)
-	assert.Equal(t, 0, resultPart2)
+	assert.Equal(t, 23610, resultPart2)
 }

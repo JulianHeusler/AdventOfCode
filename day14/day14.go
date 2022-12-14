@@ -16,21 +16,40 @@ type Position struct {
 var minX = math.MaxInt
 var maxX = 0
 var maxY = 0
-var xOffset int
+var xOffset = -1
+var yOffset = -2
+
+var sandPos = Position{500, 0}
 
 var cave [][]rune
 
 func Solve(lines []string) (part1, part2 int) {
+	return solvePart1(lines), solvePart2(lines)
+}
+
+func solvePart1(lines []string) int {
 	pathList := parse(lines)
 	setMaxBounds(pathList)
-	initCave(pathList)
+	initCave(pathList, false)
+
+	setRuneAt('+', sandPos)
+
+	//printCave()
+
+	return simulateSandrush(sandPos, false)
+}
+
+func solvePart2(lines []string) int {
+	pathList := parse(lines)
+	setMaxBounds(pathList)
+	initCave(pathList, true)
 
 	sandPos := Position{500, 0}
-	// setRuneAt('+', sandPos)
+	//setRuneAt('+', sandPos)
 
-	printCave()
+	// printCave()
 
-	return simulateSandrush(sandPos), 0
+	return simulateSandrush(sandPos, true)
 }
 
 func printCave() {
@@ -43,21 +62,27 @@ func printCave() {
 	}
 }
 
-func simulateSandrush(startPos Position) int {
-	for i := 0; true; i++ {
-		err := simSandBlock(startPos)
+func simulateSandrush(startPos Position, hasFloor bool) int {
+	sandBlocks := 0
+	for {
+		fmt.Printf("----------iteration:%0d----------\n", sandBlocks)
+		err, pos := simSandBlock(startPos, hasFloor)
 		if err != nil {
-			return i
+			fmt.Println(err)
+			return sandBlocks
 		}
-		printCave()
+		if pos.x == startPos.x && pos.y == startPos.y {
+			return sandBlocks + 1
+		}
+		// printCave()
+		sandBlocks++
 	}
-	return 0
 }
 
-func simSandBlock(pos Position) error {
+func simSandBlock(pos Position, hasFloor bool) (error, Position) {
 	for {
-		if pos.y > maxY {
-			return errors.New("endless")
+		if !hasFloor && pos.y > maxY {
+			return errors.New("endless"), Position{}
 		}
 
 		if isAir(pos) {
@@ -77,7 +102,7 @@ func simSandBlock(pos Position) error {
 		break
 	}
 	setRuneAt('o', Position{pos.x, pos.y - 1})
-	return nil
+	return nil, Position{pos.x, pos.y - 1}
 }
 
 func setMaxBounds(pathList [][]Position) {
@@ -94,18 +119,22 @@ func setMaxBounds(pathList [][]Position) {
 			}
 		}
 	}
-
-	xOffset = minX - 3
 }
 
 // cave
 
-func initCave(pathList [][]Position) {
-	cave = make([][]rune, maxY+1)
-	for y := 0; y < maxY+1; y++ {
-		cave[y] = make([]rune, maxX-xOffset)
+func initCave(pathList [][]Position, hasFloor bool) {
+	columnsCount := 2*(maxY+4) - 1
+	rowCount := maxY + 3
+	cave = make([][]rune, rowCount)
+	for y := 0; y < rowCount; y++ {
+		cave[y] = make([]rune, columnsCount)
 		for x := 0; x < len(cave[y]); x++ {
-			cave[y][x] = '.'
+			if hasFloor && y == rowCount-1 {
+				cave[y][x] = '#'
+			} else {
+				cave[y][x] = '.'
+			}
 		}
 	}
 
@@ -162,15 +191,15 @@ func setRockLine(path []Position) {
 }
 
 func setRuneAt(r rune, pos Position) {
-	x := pos.x - xOffset - 2
+	x := pos.x - sandPos.x + maxY + 3
 	y := pos.y
 	cave[y][x] = r
 }
 
 func isAir(pos Position) bool {
-	x := pos.x - xOffset - 2
+	x := pos.x - sandPos.x + maxY + 3
 	y := pos.y
-	return cave[y][x] == '.'
+	return cave[y][x] == '.' || cave[y][x] == '+'
 }
 
 // parsing
