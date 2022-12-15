@@ -17,11 +17,10 @@ func TestSolve2(t *testing.T) {
 	assert.Equal(t, 0, resultPart2)
 }
 
-
 func TestSolve(t *testing.T) {
 	resultPart1, resultPart2 := day15.Solve(reader.ReadExampleInput(15))
 	assert.Equal(t, 26, resultPart1)
-	assert.Equal(t, 0, resultPart2)
+	assert.Equal(t, 56000011, resultPart2)
 }
 
 func TestDistance(t *testing.T) {

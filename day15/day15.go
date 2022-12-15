@@ -16,9 +16,121 @@ type Sensor struct {
 	closestBeacon Position
 }
 
-func Solve(lines []string) (part1, part2 int) {
+func Solve(lines []string) (part1 int, part2 int64) {
 	sensors := parse(lines)
-	return chris(sensors, 2000000), 0
+	return chris(sensors, 10), solvePart3(sensors, 4000000)
+}
+
+var cave []bool
+
+const THREADS = 8
+
+var maxSize2 int
+
+func solvePart3(sensors []Sensor, maxSize int) int64 {
+	maxSize2 = maxSize
+	n := maxSize / THREADS
+
+	channel := make(chan int64)
+	for y := 0; y < maxSize2; y += n {
+		curr := createIntSlice(y, y+n)
+		if y+n == maxSize {
+			curr = append(curr, y+n)
+		}
+		go para(channel, curr, sensors)
+	}
+
+	i := <-channel
+	return i
+}
+
+func createIntSlice(from, to int) (slice []int) {
+	for i := from; i < to; i++ {
+		slice = append(slice, i)
+	}
+	return slice
+}
+
+func para(myChannel chan int64, yValues []int, sensors []Sensor) {
+	for _, y := range yValues {
+		if y%100000 == 0 {
+			fmt.Println(y)
+		}
+		for x := 0; x <= maxSize2; x++ {
+			currentPosition := Position{x, y}
+			if isDistressBeacon(sensors, currentPosition) {
+				myChannel <- int64(currentPosition.X)*int64(4000000) + int64(currentPosition.Y)
+			}
+		}
+	}
+}
+
+func isDistressBeacon(sensors []Sensor, current Position) bool {
+	for _, sensor := range sensors {
+		closestBeaconDistance := TaxicabDistance(sensor.position, sensor.closestBeacon)
+		distanceToSensor := TaxicabDistance(current, sensor.position)
+
+		if current == sensor.closestBeacon {
+			return false
+		}
+
+		if distanceToSensor <= closestBeaconDistance {
+			return false
+		}
+	}
+	return true
+}
+
+func solvePart2(sensors []Sensor, maxSize int) int64 {
+	cave = make([]bool, int(math.Pow(float64(maxSize+1), 2)))
+
+	for _, sensor := range sensors {
+		closestBeaconDistance := TaxicabDistance(sensor.position, sensor.closestBeacon)
+		drawDiamond(sensor.position, closestBeaconDistance, maxSize)
+	}
+
+	for _, sensor := range sensors {
+		drawItem(sensor.position, 'S', maxSize)
+		drawItem(sensor.closestBeacon, 'B', maxSize)
+	}
+
+	return findDistressBeacon(maxSize)
+}
+
+func findDistressBeacon(maxSize int) (tuningFrequency int64) {
+	for y := 0; y < maxSize; y++ {
+		for x := 0; x < maxSize; x++ {
+			if !cave[y*(maxSize+1)+x] {
+				return int64(x)*int64(4000000) + int64(y)
+			}
+		}
+	}
+	return -1
+}
+
+func drawItem(position Position, item rune, maxSize int) {
+	if 0 <= position.X && position.X <= maxSize &&
+		0 <= position.Y && position.Y <= maxSize {
+		cave[position.Y*(maxSize+1)+position.X] = true
+	}
+}
+
+func drawDiamond(origin Position, radius int, maxSize int) {
+	for y := max(origin.Y-radius, 0); y <= min(origin.Y+radius, maxSize); y++ {
+		for x := max(origin.X-radius, 0); x <= min(origin.X+radius, maxSize); x++ {
+			if TaxicabDistance(Position{x, y}, origin) <= radius {
+				cave[y*(maxSize+1)+x] = true
+			}
+		}
+	}
+}
+
+func min(value, min int) int {
+	return int(math.Min(float64(value), float64(min)))
+}
+
+func max(value, max int) int {
+	return int(math.Max(float64(value), float64(max)))
 }
 
 func chris(sensors []Sensor, lineNumber int) int {
@@ -56,9 +168,9 @@ func countAndPrint(line []bool) (count int) {
 	for _, b := range line {
 		if b {
 			count++
-			fmt.Print("#")
+			//fmt.Print("#")
 		} else {
-			fmt.Print(".")
+			//fmt.Print(".")
 		}
 	}
 	return count
