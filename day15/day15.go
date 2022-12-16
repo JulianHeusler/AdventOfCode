@@ -12,27 +12,90 @@ type Position struct {
 }
 
 type Sensor struct {
-	position      Position
-	closestBeacon Position
+	position         Position
+	closestBeacon    Position
+	distanceToBeacon int
 }
 
-func Solve(lines []string) (part1 int, part2 int64) {
+const THREADS = 4
+
+var maxSize int
+
+func Solve(lines []string, lineNumber int, maximumSize int) (part1 int, part2 int) {
 	sensors := parse(lines)
-	return chris(sensors, 10), solvePart3(sensors, 4000000)
+	maxSize = maximumSize
+	return chris(sensors, lineNumber), solvePart2(sensors)
 }
 
 var cave []bool
 
-const THREADS = 8
+func solvePart2(sensors []Sensor) int {
+	sensorsPerThread := len(sensors) / THREADS
+	channel := make(chan int)
 
-var maxSize2 int
+	for y := 0; y < len(sensors); y += sensorsPerThread {
+		var curr []Sensor
+		if y+sensorsPerThread >= len(sensors) { // last iteration
+			curr = sensors[y:]
+		} else {
+			curr = sensors[y : y+sensorsPerThread]
+		}
+		go findDistressBeaconParalell(channel, sensors, curr)
+	}
+
+	return <-channel
+}
+
+func findDistressBeaconParalell(channel chan int, allSensors []Sensor, sensorsToCheck []Sensor) {
+	for _, sensor := range sensorsToCheck {
+		candidates := getDiamondOutline(sensor.position, sensor.distanceToBeacon+1)
+		for _, candidate := range candidates {
+			if isInBounds(candidate) {
+				if isDistressBeacon(allSensors, candidate) {
+					channel <- candidate.X*4000000 + candidate.Y
+				}
+			}
+		}
+	}
+}
+
+func getDiamondOutline(origin Position, radius int) (outlinePositions []Position) {
+	for y := origin.Y - radius; y < origin.Y+radius; y++ {
+		distanceFromOrigin := TaxicabDistance(origin, Position{origin.X, y})
+		offsetX := radius - distanceFromOrigin
+		if offsetX == 0 {
+			outlinePositions = append(outlinePositions, Position{origin.X, y})
+		} else {
+			outlinePositions = append(outlinePositions, Position{origin.X - offsetX, y})
+			outlinePositions = append(outlinePositions, Position{origin.X + offsetX, y})
+		}
+	}
+	return outlinePositions
+}
+
+func isInBounds(position Position) bool {
+	return 0 <= position.X && position.X <= maxSize &&
+		0 <= position.Y && position.Y <= maxSize
+}
+
+func isDistressBeacon(sensors []Sensor, current Position) bool {
+	for _, sensor := range sensors {
+		distanceToSensor := TaxicabDistance(current, sensor.position)
+		if current == sensor.closestBeacon {
+			return false
+		}
+		if distanceToSensor <= sensor.distanceToBeacon {
+			return false
+		}
+	}
+	return true
+}
 
 func solvePart3(sensors []Sensor, maxSize int) int64 {
-	maxSize2 = maxSize
 	n := maxSize / THREADS
 
 	channel := make(chan int64)
-	for y := 0; y < maxSize2; y += n {
+	for y := 0; y < maxSize; y += n {
 		curr := createIntSlice(y, y+n)
 		if y+n == maxSize {
 			curr = append(curr, y+n)
@@ -51,12 +114,15 @@ func createIntSlice(from, to int) (slice []int) {
 	return slice
 }
 
+
+
+
 func para(myChannel chan int64, yValues []int, sensors []Sensor) {
 	for _, y := range yValues {
 		if y%100000 == 0 {
 			fmt.Println(y)
 		}
-		for x := 0; x <= maxSize2; x++ {
+		for x := 0; x <= maxSize; x++ {
 			currentPosition := Position{x, y}
 			if isDistressBeacon(sensors, currentPosition) {
 				myChannel <- int64(currentPosition.X)*int64(4000000) + int64(currentPosition.Y)
@@ -65,28 +131,13 @@ func para(myChannel chan int64, yValues []int, sensors []Sensor) {
 	}
 }
 
-func isDistressBeacon(sensors []Sensor, current Position) bool {
-	for _, sensor := range sensors {
-		closestBeaconDistance := TaxicabDistance(sensor.position, sensor.closestBeacon)
-		distanceToSensor := TaxicabDistance(current, sensor.position)
 
-		if current == sensor.closestBeacon {
-			return false
-		}
 
-		if distanceToSensor <= closestBeaconDistance {
-			return false
-		}
-	}
-	return true
-}
-
-func solvePart2(sensors []Sensor, maxSize int) int64 {
+func solvePart2Old(sensors []Sensor, maxSize int) int64 {
 	cave = make([]bool, int(math.Pow(float64(maxSize+1), 2)))
 
 	for _, sensor := range sensors {
-		closestBeaconDistance := TaxicabDistance(sensor.position, sensor.closestBeacon)
-		drawDiamond(sensor.position, closestBeaconDistance, maxSize)
+		drawDiamond(sensor.position, sensor.distanceToBeacon, maxSize)
 	}
 
 	for _, sensor := range sensors {
@@ -139,11 +190,10 @@ func chris(sensors []Sensor, lineNumber int) int {
 	line := make([]bool, lenght)
 
 	for _, sensor := range sensors {
-		closestBeaconDistance := TaxicabDistance(sensor.position, sensor.closestBeacon)
 		distanceToLine := int(math.Abs(float64(sensor.position.Y - lineNumber)))
 
-		if distanceToLine <= closestBeaconDistance {
-			from, to := getInterval(sensor.position.X, closestBeaconDistance-distanceToLine)
+		if distanceToLine <= sensor.distanceToBeacon {
+			from, to := getInterval(sensor.position.X, sensor.distanceToBeacon-distanceToLine)
 
 			if from < minX {
 				line = append(make([]bool, minX-from), line...)
@@ -161,16 +211,13 @@ func chris(sensors []Sensor, lineNumber int) int {
 		}
 	}
 
-	return countAndPrint(line) - countAlreadyKnownBeacons(sensors, lineNumber)
+	return count(line) - countAlreadyKnownBeacons(sensors, lineNumber)
 }
 
-func countAndPrint(line []bool) (count int) {
+func count(line []bool) (count int) {
 	for _, b := range line {
 		if b {
 			count++
-			//fmt.Print("#")
-		} else {
-			//fmt.Print(".")
 		}
 	}
 	return count
@@ -231,8 +278,7 @@ func solvePart1(sensors []Sensor, lineNumber int) (part1 int) {
 
 func canBeaconBePresent(sensors []Sensor, position Position) bool {
 	closestSensor, distanceToSensor := getClosestSensor(sensors, position)
-	lastMin := TaxicabDistance(closestSensor.closestBeacon, closestSensor.position)
-	return distanceToSensor > lastMin
+	return distanceToSensor > closestSensor.distanceToBeacon
 }
 
 func getClosestSensor(sensors []Sensor, position Position) (closestSensor Sensor, distance int) {
@@ -256,12 +302,14 @@ func parse(lines []string) (sensors []Sensor) {
 		sensorRegex := util.FindStringSubmatch(line, `Sensor at x=(-{0,1}\d+), y=(-{0,1}\d+):`)
 		sensorX := util.GetInt(sensorRegex[1])
 		sensorY := util.GetInt(sensorRegex[2])
+		sensorPosition := Position{sensorX, sensorY}
 
 		beaconRegex := util.FindStringSubmatch(line, `closest beacon is at x=(-{0,1}\d+), y=(-{0,1}\d+)`)
 		beaconX := util.GetInt(beaconRegex[1])
 		beaconY := util.GetInt(beaconRegex[2])
+		beaconPosition := Position{beaconX, beaconY}
 
-		sensors = append(sensors, Sensor{Position{sensorX, sensorY}, Position{beaconX, beaconY}})
+		sensors = append(sensors, Sensor{sensorPosition, beaconPosition, TaxicabDistance(sensorPosition, beaconPosition)})
 	}
 	return sensors
 }
