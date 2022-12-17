@@ -13,152 +13,127 @@ type Valve struct {
 	distances map[string]int
 }
 
+type Path struct {
+	path   string
+	volume int
+}
+
+var valveMap map[string]Valve
+
 func Solve(lines []string) (part1, part2 int) {
-	valves := parse(lines)
-	return solvePart1(valves), 0
-}
-
-func solvePart1(valves []Valve) int {
-	initValveMap(valves)
-	calcDistances(valves)
+	parseValveMap(lines)
+	calcValveDistances()
 	printDistances()
-	//fmt.Println(calcPaths())
-	start()
-
-	return getMaxVolume()
+	return solvePart1(), solvePart2()
 }
 
-func getMaxVolume() int {
+func solvePart1() int {
+	paths := getAllPossiblePaths([]Valve{valveMap["AA"]}, 30, 0)
+	return getMaxVolume(paths)
+}
+
+func solvePart2() (maxTotalVolume int) {
+	paths := getAllPossiblePaths([]Valve{valveMap["AA"]}, 26, 0)
+
+	for _, person := range paths {
+		for _, elephant := range paths {
+			if isDisjoint(person.path, elephant.path) {
+				totalVolume := person.volume + elephant.volume
+				if totalVolume > maxTotalVolume {
+					maxTotalVolume = totalVolume
+				}
+			}
+		}
+	}
+	return maxTotalVolume
+}
+
+func getMaxVolume(paths []Path) int {
 	max := 0
-	for _, volume := range volumes {
-		if volume > max {
-			max = volume
+	for _, path := range paths {
+		if path.volume > max {
+			max = path.volume
 		}
 	}
 	return max
 }
 
-func start() {
-	//for _, tunnel := range valvesMap["AA"].tunnels {
-	//	traveresed = make(map[string]bool)
-	//	breadthFirstPaths22([]Valve{valvesMap["AA"], valvesMap[tunnel]}, 30, 0)
-	//}
-
-	breadthFirstPaths22([]Valve{valvesMap["AA"]}, 30, 0)
-}
-
-var volumes []int
-
-func breadthFirstPaths22(path []Valve, time int, volume int) {
-	test := pathToString(path)
-	if test != "" {
-
-	}
-
+func getAllPossiblePaths(path []Valve, time int, volume int) (possiblePaths []Path) {
 	if time <= 0 {
-		printPath(path)
-		volumes = append(volumes, volume)
-		return
+		return possiblePaths
 	}
 
 	current := path[len(path)-1]
+	newVolume := volume + time*current.rate
+	possiblePaths = append(possiblePaths, Path{pathToString(path), newVolume})
 
 	for name, distance := range current.distances {
-		next := valvesMap[name]
-		remaining := time - distance - 1
-		newVolume := time * current.rate
+		next := valveMap[name]
+		remainingTime := time - distance - 1
 		if !contains(path, next) {
-			breadthFirstPaths22(append(path, next), remaining, volume+newVolume)
+			possiblePaths = append(possiblePaths, getAllPossiblePaths(append(path, next), remainingTime, newVolume)...)
 		}
 	}
-
-	volumes = append(volumes, volume+time*current.rate)
+	return possiblePaths
 }
 
-func printPath(path []Valve) {
-	fmt.Println(pathToString(path))
-}
-
-func pathToString(path []Valve) (s string) {
-	for _, v := range path {
-		s += v.name
-	}
-	return s
-}
-
-func printDistances() {
-	for _, v := range valvesMap {
-		if v.rate > 0 || v.name == "AA" {
-			fmt.Printf("%s: %v\n", v.name, v.distances)
+func isDisjoint(pathNameA, pathNameB string) bool {
+	for i := 0; i < len(pathNameA); i += 2 {
+		currentPathName := pathNameA[i : i+2]
+		if currentPathName != "AA" && strings.Contains(pathNameB, currentPathName) {
+			return false
 		}
 	}
+	return true
 }
 
-func initValveMap(valves []Valve) {
-	valvesMap = make(map[string]Valve)
-	for _, valve := range valves {
-		valvesMap[valve.name] = valve
-	}
-}
+var traveresed map[string]bool
 
-var valvesMap map[string]Valve
-
-func calcDistances(valves []Valve) {
-	for _, valve := range valves {
+func calcValveDistances() {
+	for _, valve := range valveMap {
 		traveresed = make(map[string]bool)
 		if valve.rate > 0 || valve.name == "AA" {
-			breadthFirstSearch([]Valve{valve}, valve, 0)
+			breadthFirstCalcDistances([]Valve{valve}, valve, 0)
 		}
 	}
 }
 
-func calcPaths() (x []int) {
-	for _, tunnel := range valvesMap["AA"].tunnels {
-		x = append(x, breadthFirstPaths([]Valve{valvesMap["AA"], valvesMap[tunnel]}, 30))
-	}
-	return x
-}
-
-func temp2(current []Valve) (path []Valve) {
-	if len(current)+1 == 6 {
-		return path
-	}
-
-	for _, tunnel := range current[len(current)-1].tunnels {
-		t := valvesMap[tunnel]
-		if !contains(current, t) {
-			path = append(path, temp2(append(current, t))...)
-		}
-	}
-	return path
-}
-
-func breadthFirstPaths(currentValves []Valve, depth int) (pressure int) {
-	if depth <= 0 {
-		return pressure
-	}
-
+func breadthFirstCalcDistances(currentValves []Valve, origin Valve, distance int) {
 	var possibleNextValves []Valve
 	for _, current := range currentValves {
 		if !traveresed[current.name] {
-			possibleNextValves = append(possibleNextValves, temp(current, depth)...)
+			possibleNextValves = append(possibleNextValves, setDistanceIfValid(current, origin, distance)...)
 		}
 	}
 	if len(possibleNextValves) > 0 {
-		breadthFirstPaths(possibleNextValves, depth-1)
+		breadthFirstCalcDistances(possibleNextValves, origin, distance+1)
 	}
-
-	return pressure
 }
 
-func temp(current Valve, depth int) (nextValves []Valve) {
+func setDistanceIfValid(current Valve, origin Valve, distance int) (nextValves []Valve) {
 	traveresed[current.name] = true
-
+	if origin.name != current.name {
+		if current.rate > 0 {
+			if isUseful(origin, current, distance) || origin.name == "AA" {
+				valveMap[origin.name].distances[current.name] = distance
+			}
+		}
+	}
 	for _, tunnel := range current.tunnels {
-		nextValves = append(nextValves, valvesMap[tunnel])
+		nextValves = append(nextValves, valveMap[tunnel])
 	}
 	return nextValves
 }
+
+func isUseful(origin Valve, current Valve, distance int) bool {
+	return isABAGreaterThanBA(origin.rate, current.rate, distance)
+}
+
+func isABAGreaterThanBA(a, b, distance int) bool {
+	return a*(2*distance+1)+b*distance > b*(1+distance)
+}
+
+// util
 
 func contains(path []Valve, candiate Valve) bool {
 	for _, valve := range path {
@@ -169,52 +144,28 @@ func contains(path []Valve, candiate Valve) bool {
 	return false
 }
 
-func breadthFirstSearch(currentValves []Valve, origin Valve, distance int) {
-	var possibleNextValves []Valve
-	for _, current := range currentValves {
-		if !traveresed[current.name] {
-			possibleNextValves = append(possibleNextValves, getNextValves(current, origin, distance)...)
+func pathToString(path []Valve) (s string) {
+	for _, v := range path {
+		s += v.name
+	}
+	return s
+}
+
+func printDistances() {
+	for _, v := range valveMap {
+		if v.rate > 0 || v.name == "AA" {
+			fmt.Printf("%s: %v\n", v.name, v.distances)
 		}
 	}
-	if len(possibleNextValves) > 0 {
-		breadthFirstSearch(possibleNextValves, origin, distance+1)
-	}
 }
 
-var traveresed map[string]bool
-
-func getNextValves(current Valve, origin Valve, distance int) (nextValves []Valve) {
-	traveresed[current.name] = true
-
-	if origin.name != current.name {
-		if current.rate > 0 {
-			if lohntEsSich(origin, current, distance) || origin.name == "AA" {
-				valvesMap[origin.name].distances[current.name] = distance
-			}
-		}
-	}
-
-	for _, tunnel := range current.tunnels {
-		nextValves = append(nextValves, valvesMap[tunnel])
-	}
-	return nextValves
-}
-
-func lohntEsSich(origin Valve, current Valve, distance int) bool {
-	return compare(origin.rate, current.rate, distance)
-}
-
-func compare(a, b, distance int) bool {
-	return a*(2*distance+1)+b*distance > b*(1+distance)
-}
-
-func parse(lines []string) (valves []Valve) {
+func parseValveMap(lines []string) {
+	valveMap = make(map[string]Valve)
 	for _, line := range lines {
 		regex := util.FindStringSubmatch(line, `Valve (\w\w) has flow rate=(\d+); tunnels* leads* to valves* ([\w, ]*)`)
 		name := regex[1]
 		rate := util.GetInt(regex[2])
 		tunnels := strings.Split(regex[3], ", ")
-		valves = append(valves, Valve{name: name, rate: rate, tunnels: tunnels, distances: make(map[string]int)})
+		valveMap[name] = Valve{name: name, rate: rate, tunnels: tunnels, distances: make(map[string]int)}
 	}
-	return valves
 }
