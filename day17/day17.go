@@ -2,6 +2,7 @@ package day17
 
 import (
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -10,18 +11,93 @@ const maxLength = 7
 var jetIndex int
 
 func Solve(lines []string) (part1, part2 int) {
-	return solvePart1(lines[0]), 0
+	return solvePart1(lines[0], 2022), solvePart1(lines[0], 1000000000000)
 }
 
-func solvePart1(jetInput string) int {
+func solvePart1(jetInput string, rounds int) int {
 	var chamber []string
 	jetIndex = 0
 	rocks := getDefaultRocks()
+	score := 0
 
-	for i := 0; i < 2022; i++ {
-		chamber = simulateRock(chamber, jetInput, rocks[i % 5])
+	test := 5
+	f := 5 * len(jetInput)
+	temp := 0
+
+	for i := 0; i < rounds; i++ {
+		if i%10000 == 0 {
+			percent := int(float64(i) / float64(rounds) * 100)
+			fmt.Printf("%d%% | iteration: %d, score:=%d\n", percent, i, score)
+		}
+
+		chamber = simulateRock(chamber, jetInput, rocks[i%5])
+
+		newChamber, removedLines := removeBlockedLines(chamber)
+		chamber = newChamber
+		score += removedLines
+
+		//newChamber2, tetrisScore := tetris(chamber)
+		//chamber = newChamber2
+		//score += tetrisScore
+		if i%f == 0 {
+			fmt.Println(len(chamber) + score - temp)
+			temp = len(chamber) + score
+			test--
+		}
 	}
-	return len(chamber)
+	return len(chamber) + score
+}
+
+func tetris(chamber []string) ([]string, int) {
+	maxY := 0
+	for y, line := range chamber {
+		if line == "#######" {
+			maxY = y
+		}
+	}
+	return chamber[maxY:], maxY
+}
+
+func removeBlockedLines(chamber []string) ([]string, int) {
+	for y := range chamber {
+		pos := canNotSeeSky(chamber, y)
+		if pos != -1 {
+			return chamber[pos:], pos
+		}
+	}
+	return chamber, 0
+}
+
+func canNotSeeSky(chamber []string, startY int) int {
+	var levels []int
+	for x := 0; x < maxLength; x++ {
+		b := blocked(chamber, startY, x)
+		if b != -1 {
+			levels = append(levels, b)
+		}
+	}
+
+	lowest := math.MaxInt
+	for _, y := range levels {
+		if y == -1 {
+			return -1
+		}
+		if y < lowest {
+			lowest = y
+		}
+	}
+	return lowest
+}
+
+func blocked(chamber []string, startY, startX int) int {
+	for y := startY; y < len(chamber); y++ {
+		if chamber[startY][startX] == '#' {
+			if chamber[y][startX] == '#' {
+				return y
+			}
+		}
+	}
+	return -1
 }
 
 func simulateRock(chamber []string, jetInput string, rock []string) []string {
