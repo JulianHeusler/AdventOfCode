@@ -7,17 +7,39 @@ import (
 
 type Code struct {
 	value      int
+	moveCount  int
 	startIndex int
 }
 
-func Solve(lines []string) (part1 int, part2 int) {
-	file := parseFile(lines)
-	return solvePart1(file), 0
+var originalFile []Code
+
+const decryptionKey = 811589153
+
+func Solve(lines []string) (part1 int, part2 int64) {
+	parseOriginalFile(lines)
+	return solvePart1(), solvePart2()
 }
 
-func solvePart1(file []Code) int {
-	mixedFile := mixing(file)
+func solvePart1() int {
+	return getSumOfGroveCoordinates(mixing(originalFile))
+}
 
+func solvePart2() int64 {
+	for i := range originalFile {
+		originalFile[i].moveCount = originalFile[i].value * (decryptionKey % (len(originalFile) - 1))
+	}
+
+	var mixedFile = make([]Code, len(originalFile))
+	copy(mixedFile, originalFile)
+
+	for i := 0; i < 10; i++ {
+		mixedFile = mixing(mixedFile)
+	}
+
+	return int64(getSumOfGroveCoordinates(mixedFile)) * int64(decryptionKey)
+}
+
+func getSumOfGroveCoordinates(mixedFile []Code) int {
 	l := len(mixedFile)
 	i := indexOfZero(mixedFile)
 
@@ -27,16 +49,15 @@ func solvePart1(file []Code) int {
 	return a + b + c
 }
 
-func mixing(originalfile []Code) (mixedFile []Code) {
-	mixedFile = make([]Code, len(originalfile))
-	copy(mixedFile, originalfile)
+func mixing(file []Code) (mixedFile []Code) {
+	mixedFile = make([]Code, len(file))
+	copy(mixedFile, file)
 
-	for _, code := range originalfile {
+	for _, code := range originalFile {
 		removeIndex := indexOf(code.startIndex, mixedFile)
-		insertIndex := (removeIndex + code.value) % (len(mixedFile) - 1)
+		insertIndex := (removeIndex + code.moveCount) % (len(mixedFile) - 1)
 		if insertIndex < 0 {
 			insertIndex = len(mixedFile) - 1 + insertIndex
-
 		} else if insertIndex == 0 {
 			insertIndex = len(mixedFile) - 1 // append at the end
 		}
@@ -65,11 +86,10 @@ func insert(file []Code, index int, value Code) []Code {
 	return file
 }
 
-func parseFile(lines []string) (file []Code) {
+func parseOriginalFile(lines []string) {
 	for i, line := range lines {
-		file = append(file, Code{util.GetInt(line), i})
+		originalFile = append(originalFile, Code{util.GetInt(line), util.GetInt(line), i})
 	}
-	return file
 }
 
 func indexOf(startPos int, file []Code) int {
@@ -90,13 +110,4 @@ func indexOfZero(file []Code) int {
 	}
 	fmt.Println("not found")
 	return -1
-}
-
-func contains(i []int, x int) bool {
-	for _, v := range i {
-		if v == x {
-			return true
-		}
-	}
-	return false
 }
