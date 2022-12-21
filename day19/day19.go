@@ -2,6 +2,15 @@ package day19
 
 import "adventofcode/util"
 
+type Material int
+
+const (
+	Ore = iota
+	Clay
+	Obsidian
+	Geode
+)
+
 type Blueprint struct {
 	robots []RobotRecipe
 }
@@ -13,9 +22,38 @@ type RobotRecipe struct {
 	obsidianCost int
 }
 
+type Income struct {
+	ore      int
+	clay     int
+	obsidian int
+	geode    int
+}
+
+type Wallet struct {
+	ore      int
+	clay     int
+	obsidian int
+	geode    int
+}
+
 func Solve(lines []string) (part1 int, part2 int) {
 	parse(lines)
 	return 0, 0
+}
+
+func (m Material) EnumIndex() int {
+	return int(m)
+}
+
+func solvePart1(blueprints []Blueprint) int {
+	for _, blueprint := range blueprints {
+		sim(blueprint, 24, Income{1, 0, 0, 0}, Wallet{0, 0, 0, 0})
+	}
+	return 0
+}
+
+func sim(b Blueprint, time int, income Income, wallet Wallet) {
+	
 }
 
 // keep in mind: blueprint index + 1
