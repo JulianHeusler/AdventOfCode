@@ -12,8 +12,8 @@ func FindFirstInt(input, regex string) int {
 }
 
 func FindIntSlice(input, regex, delimter string) (ints []int) {
-	experssion := regexp.MustCompile(regex)
-	items := strings.Split(experssion.FindStringSubmatch(input)[1], delimter)
+	expression := regexp.MustCompile(regex)
+	items := strings.Split(expression.FindStringSubmatch(input)[1], delimter)
 	for _, item := range items {
 		ints = append(ints, GetInt(item))
 	}
