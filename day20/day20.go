@@ -11,7 +11,7 @@ type Code struct {
 }
 
 func Solve(lines []string) (part1 int, part2 int) {
-	file := parse(lines)
+	file := parseFile(lines)
 	return solvePart1(file), 0
 }
 
@@ -19,7 +19,7 @@ func solvePart1(file []Code) int {
 	mixedFile := mixing(file)
 
 	l := len(mixedFile)
-	i := indexOf(0, mixedFile)
+	i := indexOfZero(mixedFile)
 
 	a := mixedFile[(i+1000)%l].value
 	b := mixedFile[(i+2000)%l].value
@@ -27,36 +27,25 @@ func solvePart1(file []Code) int {
 	return a + b + c
 }
 
-func mixing(file []Code) []Code {
-	var fileCopy = make([]Code, len(file))
-	copy(fileCopy, file)
+func mixing(originalfile []Code) (mixedFile []Code) {
+	mixedFile = make([]Code, len(originalfile))
+	copy(mixedFile, originalfile)
 
-	for _, code := range file {
-		newIndex := (indexOf(code.startIndex, fileCopy) + code.value) % (len(file))
-		if newIndex < 0 {
-			newIndex = len(file) + newIndex - 1
-			if newIndex == 0 {
-				newIndex = len(fileCopy)
-			}
+	for _, code := range originalfile {
+		removeIndex := indexOf(code.startIndex, mixedFile)
+		insertIndex := (removeIndex + code.value) % (len(mixedFile) - 1)
+		if insertIndex < 0 {
+			insertIndex = len(mixedFile) - 1 + insertIndex
+
+		} else if insertIndex == 0 {
+			insertIndex = len(mixedFile) - 1 // append at the end
 		}
-		insertIndex := newIndex
 
-		toRemoveIndex := indexOf(code.startIndex, fileCopy)
-		fileCopy = remove(fileCopy, toRemoveIndex)
-		fileCopy = insert(fileCopy, insertIndex, code)
+		mixedFile = remove(mixedFile, removeIndex)
+		mixedFile = insert(mixedFile, insertIndex, code)
 	}
 
-	return fileCopy
-}
-
-func findIndexBetween(file []Code, leftNumber, rightNumber Code) int {
-	for i := range file {
-		if file[i] == leftNumber && file[(i+1)%len(file)] == rightNumber {
-			return i
-		}
-	}
-	fmt.Println("Error not found")
-	return -1
+	return mixedFile
 }
 
 func remove(file []Code, index int) []Code {
@@ -76,12 +65,7 @@ func insert(file []Code, index int, value Code) []Code {
 	return file
 }
 
-func swap(file []int, a, b int) []int {
-	file[a], file[b] = file[b], file[a]
-	return file
-}
-
-func parse(lines []string) (file []Code) {
+func parseFile(lines []string) (file []Code) {
 	for i, line := range lines {
 		file = append(file, Code{util.GetInt(line), i})
 	}
@@ -91,6 +75,16 @@ func parse(lines []string) (file []Code) {
 func indexOf(startPos int, file []Code) int {
 	for index, code := range file {
 		if code.startIndex == startPos {
+			return index
+		}
+	}
+	fmt.Println("not found")
+	return -1
+}
+
+func indexOfZero(file []Code) int {
+	for index, code := range file {
+		if code.value == 0 {
 			return index
 		}
 	}
