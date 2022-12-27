@@ -18,22 +18,31 @@ const (
 	up
 )
 
+const (
+	topSide = iota
+	frontSide
+	bottomSide
+	backSide
+	rigtSide
+	leftSide
+)
+
 func Solve(lines []string) (part1 int, part2 int) {
 	board, instructions := parse(lines)
-	print(board)
+	// print(board)
 	return solvePart1(board, instructions), 0
 }
 
 func solvePart1(board [][]rune, instructions []string) int {
 	direction := 0
-	position := Position{findEdge(left, Position{0, 0}, board), 0}
+	position := Position{findEdgeIndexForSide(left, Position{0, 0}, board), 0}
 
 	for _, instruction := range instructions {
 		if instruction == "R" {
 			direction = (direction + 1) % 4
 		} else if instruction == "L" {
-			if direction == 0 {
-				direction = 3
+			if direction == right {
+				direction = up
 			} else {
 				direction--
 			}
@@ -49,9 +58,9 @@ func move(current Position, direction, amount int, board [][]rune) Position {
 	for i := 0; i < amount; i++ {
 		switch direction {
 		case right:
-			rightEdge := findEdge(right, current, board)
+			rightEdge := findEdgeIndexForSide(right, current, board)
 			if rightEdge < current.x+1 {
-				leftEdge := findEdge(left, current, board)
+				leftEdge := findEdgeIndexForSide(left, current, board)
 				if board[current.y][leftEdge] != '#' {
 					current.x = leftEdge
 				}
@@ -59,9 +68,9 @@ func move(current Position, direction, amount int, board [][]rune) Position {
 				current.x++
 			}
 		case down:
-			bottomEdge := findEdge(down, current, board)
+			bottomEdge := findEdgeIndexForSide(down, current, board)
 			if bottomEdge < current.y+1 {
-				topEdge := findEdge(up, current, board)
+				topEdge := findEdgeIndexForSide(up, current, board)
 				if board[topEdge][current.x] != '#' {
 					current.y = topEdge
 				}
@@ -69,9 +78,9 @@ func move(current Position, direction, amount int, board [][]rune) Position {
 				current.y++
 			}
 		case left:
-			leftEdge := findEdge(left, current, board)
+			leftEdge := findEdgeIndexForSide(left, current, board)
 			if leftEdge > current.x-1 {
-				rightEdge := findEdge(right, current, board)
+				rightEdge := findEdgeIndexForSide(right, current, board)
 				if board[current.y][rightEdge] != '#' {
 					current.x = rightEdge
 				}
@@ -79,9 +88,9 @@ func move(current Position, direction, amount int, board [][]rune) Position {
 				current.x--
 			}
 		case up:
-			topEdge := findEdge(up, current, board)
+			topEdge := findEdgeIndexForSide(up, current, board)
 			if topEdge > current.y-1 {
-				bottomEdge := findEdge(down, current, board)
+				bottomEdge := findEdgeIndexForSide(down, current, board)
 				if board[bottomEdge][current.x] != '#' {
 					current.y = bottomEdge
 				}
@@ -93,32 +102,32 @@ func move(current Position, direction, amount int, board [][]rune) Position {
 	return current
 }
 
-func findEdge(side int, position Position, board [][]rune) int {
+func findEdgeIndexForSide(side int, current Position, board [][]rune) int {
 	switch side {
 	case right:
-		for x := len(board[position.y]) - 1; x >= 0; x-- {
-			if board[position.y][x] != ' ' {
+		for x := len(board[current.y]) - 1; x >= 0; x-- {
+			if board[current.y][x] != ' ' {
 				return x
 			}
 		}
 	case down:
 		for y := len(board) - 1; y >= 0; y-- {
-			if len(board[y])-1 >= position.x {
-				if board[y][position.x] != ' ' {
+			if len(board[y])-1 >= current.x {
+				if board[y][current.x] != ' ' {
 					return y
 				}
 			}
 		}
 	case left:
-		for x := 0; x < len(board[position.y])-1; x++ {
-			if board[position.y][x] != ' ' {
+		for x := 0; x < len(board[current.y])-1; x++ {
+			if board[current.y][x] != ' ' {
 				return x
 			}
 		}
 	case up:
 		for y := 0; y < len(board)-1; y++ {
-			if len(board[y])-1 >= position.x {
-				if board[y][position.x] != ' ' {
+			if len(board[y])-1 >= current.x {
+				if board[y][current.x] != ' ' {
 					return y
 				}
 			}
@@ -139,9 +148,7 @@ func parse(lines []string) (board [][]rune, instructions []string) {
 		}
 	}
 
-	instructions = regexp.MustCompile(`\d+|R|L`).FindAllString(lines[lastLineIndex], -1)
-
-	return board, instructions
+	return board, regexp.MustCompile(`\d+|R|L`).FindAllString(lines[lastLineIndex], -1)
 }
 
 func print(board [][]rune) {

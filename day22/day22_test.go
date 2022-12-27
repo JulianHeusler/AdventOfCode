@@ -11,7 +11,7 @@ import (
 func TestSolve(t *testing.T) {
 	resultPart1, resultPart2 := day22.Solve(reader.ReadExampleInput(22))
 	assert.Equal(t, 6032, resultPart1)
-	assert.Equal(t, 0, resultPart2)
+	assert.Equal(t, 5031, resultPart2)
 }
 
 func TestSolveRealInput(t *testing.T) {
