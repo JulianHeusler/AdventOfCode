@@ -17,8 +17,56 @@ type Bracket struct {
 }
 
 func Solve(lines []string) (part1, part2 int) {
-	packets := parse2(lines)
-	return solvePart1(packets), 0
+	//packets := parse2(lines)
+	return newHope(lines), 0
+}
+
+func comp(left, right any) {
+	// left.([]any)
+	// left.(int)
+}
+
+func newHope(lines []string) (c int) {
+	for i := 0; i < len(lines)-2; i += 3 {
+		if compare(lines[i], lines[i+1]) {
+			c++
+		}
+	}
+	return c
+}
+
+func compare(left, right string) bool {
+	if len(left) == 0 {
+		return true
+	}
+	if len(right) == 0 {
+		return false
+	}
+
+	l := util.FindStringSubmatch(left, `\[(.*)\]`)[1]
+	r := util.FindStringSubmatch(right, `\[(.*)\]`)[1]
+
+	if l[0] != '[' && r[0] != '[' {
+		lf := util.FindStringSubmatch(l, `([\d,]*)`)[1]
+		rf := util.FindStringSubmatch(r, `([\d,]*)`)[1]
+		for i := range lf {
+			if lf[i] > rf[i] {
+				return false
+			}
+		}
+	}
+
+	l2 := util.FindStringSubmatch(l, `\[(.*)\]`)
+	r2 := util.FindStringSubmatch(r, `\[(.*)\]`)
+
+	if len(l2) == 0 {
+		return true
+	}
+	if len(r2) == 0 {
+		return false
+	}
+
+	return compare(l2[0], r2[0])
 }
 
 func solvePart1(packets [][]Bracket) (part1 int) {
