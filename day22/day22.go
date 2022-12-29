@@ -10,7 +10,7 @@ type Position struct {
 	y int
 }
 
-type moveStep func(current Position, direction int) (newPosition Position, newDirection int)
+type handleEdgeMethod func(current Position, direction int) (newPosition Position, newDirection int)
 
 const (
 	right = iota
@@ -33,100 +33,60 @@ func Solve(lines []string, cubeSize int) (part1 int, part2 int) {
 
 func solvePart1() int {
 	return simulateInstructions(func(current Position, direction int) (Position, int) {
+		var next Position
+
 		switch direction {
 		case right:
-			if findEdgeIndexForSide(right, current) < current.x+1 {
-				leftEdge := findEdgeIndexForSide(left, current)
-				if board[current.y][leftEdge] != '#' {
-					current.x = leftEdge
-				}
-			} else if board[current.y][current.x+1] == '.' {
-				current.x++
-			}
+			next = Position{findEdgeIndexForSide(left, current), current.y}
 		case down:
-			bottomEdge := findEdgeIndexForSide(down, current)
-			if bottomEdge < current.y+1 {
-				topEdge := findEdgeIndexForSide(up, current)
-				if board[topEdge][current.x] != '#' {
-					current.y = topEdge
-				}
-			} else if board[current.y+1][current.x] == '.' {
-				current.y++
-			}
+			next = Position{current.x, findEdgeIndexForSide(up, current)}
 		case left:
-			leftEdge := findEdgeIndexForSide(left, current)
-			if leftEdge > current.x-1 {
-				rightEdge := findEdgeIndexForSide(right, current)
-				if board[current.y][rightEdge] != '#' {
-					current.x = rightEdge
-				}
-			} else if board[current.y][current.x-1] == '.' {
-				current.x--
-			}
+			next = Position{findEdgeIndexForSide(right, current), current.y}
 		case up:
-			topEdge := findEdgeIndexForSide(up, current)
-			if topEdge > current.y-1 {
-				bottomEdge := findEdgeIndexForSide(down, current)
-				if board[bottomEdge][current.x] != '#' {
-					current.y = bottomEdge
-				}
-			} else if board[current.y-1][current.x] == '.' {
-				current.y--
-			}
+			next = Position{current.x, findEdgeIndexForSide(down, current)}
 		}
-		return current, direction
+
+		if !isStone(next) {
+			return next, direction
+		} else {
+			return current, direction
+		}
 	})
 }
 
 func solvePart2() int {
 	return simulateInstructions(func(current Position, direction int) (Position, int) {
+		var newPosition Position
+		var newDirection int
+
 		switch direction {
 		case right:
 			if isEmtpy(Position{current.x + 1, current.y}) {
-				next, newDirection := findFirstEdge(current, direction)
-				if !isStone(next) {
-					current = next
-					direction = newDirection
-				}
-			} else if board[current.y][current.x+1] == '.' {
-				current.x++
+				newPosition, newDirection = findFirstEdge(current, direction)
 			}
 		case down:
 			if isEmtpy(Position{current.x, current.y + 1}) {
-				next, newDirection := findFirstEdge(current, direction)
-				if !isStone(next) {
-					current = next
-					direction = newDirection
-				}
-			} else if board[current.y+1][current.x] == '.' {
-				current.y++
+				newPosition, newDirection = findFirstEdge(current, direction)
 			}
 		case left:
 			if isEmtpy(Position{current.x - 1, current.y}) {
-				next, newDirection := findFirstEdge(current, direction)
-				if !isStone(next) {
-					current = next
-					direction = newDirection
-				}
-			} else if board[current.y][current.x-1] == '.' {
-				current.x--
+				newPosition, newDirection = findFirstEdge(current, direction)
 			}
 		case up:
 			if isEmtpy(Position{current.x, current.y - 1}) {
-				next, newDirection := findFirstEdge(current, direction)
-				if !isStone(next) {
-					current = next
-					direction = newDirection
-				}
-			} else if board[current.y-1][current.x] == '.' {
-				current.y--
+				newPosition, newDirection = findFirstEdge(current, direction)
 			}
 		}
-		return current, direction
+
+		if !isStone(newPosition) {
+			return newPosition, newDirection
+		} else {
+			return current, direction
+		}
 	})
 }
 
-func simulateInstructions(move moveStep) int {
+func simulateInstructions(handleEdge handleEdgeMethod) int {
 	direction := right
 	position := Position{findEdgeIndexForSide(left, Position{0, 0}), 0}
 
@@ -137,7 +97,7 @@ func simulateInstructions(move moveStep) int {
 			direction = (direction - 1 + 4) % 4
 		} else {
 			for i := 0; i < util.GetInt(instruction); i++ {
-				position, direction = move(position, direction)
+				position, direction = move(position, direction, handleEdge)
 			}
 		}
 	}
@@ -149,32 +109,54 @@ func calculateResult(position Position, direction int) int {
 	return 1000*(position.y+1) + 4*(position.x+1) + direction
 }
 
+func move(current Position, direction int, handleEdge handleEdgeMethod) (newPosition Position, newDirection int) {
+	var next Position
+	switch direction {
+	case right:
+		next = Position{current.x + 1, current.y}
+	case down:
+		next = Position{current.x, current.y + 1}
+	case left:
+		next = Position{current.x - 1, current.y}
+	case up:
+		next = Position{current.x, current.y - 1}
+	}
+
+	if isEmtpy(next) {
+		current, direction = handleEdge(current, direction)
+	} else if isFree(next) {
+		current = next
+	}
+
+	return current, direction
+}
+
 func findEdgeIndexForSide(side int, current Position) int {
 	switch side {
 	case right:
 		for x := len(board[current.y]) - 1; x >= 0; x-- {
-			if board[current.y][x] != ' ' {
+			if !isEmtpy(Position{x, current.y}) {
 				return x
 			}
 		}
 	case down:
 		for y := len(board) - 1; y >= 0; y-- {
 			if len(board[y])-1 >= current.x {
-				if board[y][current.x] != ' ' {
+				if !isEmtpy(Position{current.x, y}) {
 					return y
 				}
 			}
 		}
 	case left:
 		for x := 0; x < len(board[current.y])-1; x++ {
-			if board[current.y][x] != ' ' {
+			if !isEmtpy(Position{x, current.y}) {
 				return x
 			}
 		}
 	case up:
 		for y := 0; y < len(board)-1; y++ {
 			if len(board[y])-1 >= current.x {
-				if board[y][current.x] != ' ' {
+				if !isEmtpy(Position{current.x, y}) {
 					return y
 				}
 			}
@@ -233,14 +215,18 @@ func isEdge(positionA, positionB Position) (bool, int) {
 
 func getDirectionFromSubtraction(positionA, positionB Position) int {
 	difference := Position{positionB.x - positionA.x, positionB.y - positionA.y}
-	if difference.x == 1 && difference.y == 0 {
-		return left
-	} else if difference.x == -1 && difference.y == 0 {
-		return right
-	} else if difference.x == 0 && difference.y == 1 {
-		return up
-	} else if difference.x == 0 && difference.y == -1 {
-		return down
+	if difference.y == 0 {
+		if difference.x == 1 {
+			return left
+		} else if difference.x == -1 {
+			return right
+		}
+	} else if difference.x == 0 {
+		if difference.y == 1 {
+			return up
+		} else if difference.y == -1 {
+			return down
+		}
 	}
 	return -1
 }
@@ -254,6 +240,10 @@ func isEmtpy(position Position) bool {
 
 func isStone(position Position) bool {
 	return board[position.y][position.x] == '#'
+}
+
+func isFree(position Position) bool {
+	return board[position.y][position.x] == '.'
 }
 
 func isOutOfBounds(position Position) bool {

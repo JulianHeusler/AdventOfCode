@@ -8,12 +8,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSolvePart1(t *testing.T) {
-	resultPart1, _ := day22.Solve(reader.ReadExampleInput(22), 4)
+func TestSolve(t *testing.T) {
+	resultPart1, resultPart2 := day22.Solve(reader.ReadExampleInput(22), 4)
 	assert.Equal(t, 6032, resultPart1)
+	assert.Equal(t, 5031, resultPart2)
 }
 
-func TestSolvePart2(t *testing.T) {
+func TestSolveTransmuted(t *testing.T) {
 	lines := []string{
 		"    ...#.#..",
 		"    .#......",
@@ -34,13 +35,9 @@ func TestSolvePart2(t *testing.T) {
 		"",
 		"10R5L5R10L4R5L5",
 	}
-	_, resultPart2 := day22.Solve(lines, 4)
+	resultPart1, resultPart2 := day22.Solve(lines, 4)
+	assert.Equal(t, 10012, resultPart1)
 	assert.Equal(t, 10006, resultPart2)
-}
-
-func TestSolvePart2Example(t *testing.T) {
-	_, resultPart2 := day22.Solve(reader.ReadExampleInput(22), 4)
-	assert.Equal(t, 5031, resultPart2)
 }
 
 func TestSolveRealInput(t *testing.T) {
