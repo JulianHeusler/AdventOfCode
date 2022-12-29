@@ -12,29 +12,30 @@ func Solve(lines []string) (part1 string, part2 int) {
 }
 
 func solvePart1(lines []string) (result string) {
-	for _, line := range lines {
-		result = addSNAFU(result, line)
+	for _, current := range lines {
+		result = addSNAFUNumbers(result, current)
 	}
 	return result
 }
 
-func addSNAFU(a, b string) (result string) {
-	a, b = padd(a, b)
-	var overflow string
-	var r string
+func addSNAFUNumbers(numberA, numberB string) (result string) {
+	numberA, numberB = paddOnSameLength(numberA, numberB)
+	overflow := "0"
+	var currentSymbol string
 
-	for i := len(a) - 1; i >= 0; i-- {
-		r, overflow = vollAddierer(string(a[i]), string(b[i]), overflow)
-		result = r + result
+	for i := len(numberA) - 1; i >= 0; i-- {
+		currentSymbol, overflow = fullAdder(string(numberA[i]), string(numberB[i]), overflow)
+		result = currentSymbol + result
 	}
 
-	if result[0] == '0' {
-		return result[1:]
+	if overflow != "0" {
+		result = overflow + result
 	}
+
 	return result
 }
 
-func padd(a, b string) (string, string) {
+func paddOnSameLength(a, b string) (string, string) {
 	if len(a) > len(b) {
 		count := len(a) - len(b)
 		for i := 0; i < count; i++ {
@@ -46,11 +47,11 @@ func padd(a, b string) (string, string) {
 			a = "0" + a
 		}
 	}
-	return "0" + a, "0" + b
+	return a, b
 }
 
-func vollAddierer(a, b, o string) (res, overflow string) {
-	sum := toInt(a) + toInt(b) + toInt(o)
+func fullAdder(a, b, oldOverflow string) (res, overflow string) {
+	sum := toInt(a) + toInt(b) + toInt(oldOverflow)
 	if sum < -2 {
 		return toSymbol(sum + 5), "-"
 	} else if sum > 2 {
