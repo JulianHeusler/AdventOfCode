@@ -10,42 +10,65 @@ const maxLength = 7
 
 var jetIndex int
 
-func Solve(lines []string) (part1, part2 int) {
+func Solve(lines []string) (part1, part2 int64) {
+	// return solvePart1(lines[0], 2022), solvePart1(lines[0], 1000000000000)
 	return solvePart1(lines[0], 2022), solvePart1(lines[0], 1000000000000)
 }
 
-func solvePart1(jetInput string, rounds int) int {
+func solvePart1(jetInput string, rounds int64) (score int64) {
 	var chamber []string
 	jetIndex = 0
 	rocks := getDefaultRocks()
-	score := 0
+	score = 0
+	var oldHeight int64
+	oldHeight = 0
+	var loop []int
 
-	test := 5
-	f := 5 * len(jetInput)
-	temp := 0
-
-	for i := 0; i < rounds; i++ {
-		if i%10000 == 0 {
-			percent := int(float64(i) / float64(rounds) * 100)
-			fmt.Printf("%d%% | iteration: %d, score:=%d\n", percent, i, score)
+	for i := int64(0); i < rounds; i++ {
+		if i%5 == 1 {
+			oldHeight = score + int64(len(chamber))
 		}
 
 		chamber = simulateRock(chamber, jetInput, rocks[i%5])
 
-		newChamber, removedLines := removeBlockedLines(chamber)
-		chamber = newChamber
-		score += removedLines
+		if len(chamber) > 200 {
+			chamber = chamber[150:]
+			score += 150
+		}
 
-		//newChamber2, tetrisScore := tetris(chamber)
-		//chamber = newChamber2
-		//score += tetrisScore
-		if i%f == 0 {
-			fmt.Println(len(chamber) + score - temp)
-			temp = len(chamber) + score
-			test--
+		if i > 2000 && i%5 == 0 {
+			delta := score + int64(len(chamber)) - oldHeight
+			loop = append(loop, int(delta))
+		}
+		// 2000 + Min loop length
+		if i > 2100 && i%10 == 0 {
+			if isRepeating(loop) {
+				loopDelta := 0
+				for _, v := range loop {
+					loopDelta += v
+				}
+				x := (rounds - i) / int64(len(loop)*5)
+				score += (int64(x) * int64(loopDelta))
+				i += x * int64(len(loop)) * 5
+				fmt.Println(i)
+			}
 		}
 	}
-	return len(chamber) + score
+	return int64(len(chamber)) + score
+}
+
+func isRepeating(list []int) bool {
+	if len(list)%2 != 0 {
+		panic("nu")
+		return false
+	}
+	mid := len(list) / 2
+	for i := 0; i < mid; i++ {
+		if list[i] != list[mid+i] {
+			return false
+		}
+	}
+	return true
 }
 
 func tetris(chamber []string) ([]string, int) {
