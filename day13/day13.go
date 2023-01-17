@@ -5,14 +5,14 @@ import (
 )
 
 func Solve(lines []string) (part1, part2 int) {
-	return solvePart1(parse(lines)), 0
+	return solvePart1(lines), 0
 }
 
-func solvePart1(packets []string) (sum int) {
-	for i := 0; i < len(packets); i += 3 {
-		left := packets[i]
-		right := packets[i+1]
-		if isRightOrder(left, right) {
+func solvePart1(lines []string) (sum int) {
+	for i := 0; i < len(lines); i += 3 {
+		leftPacket := lines[i]
+		rightPacket := lines[i+1]
+		if isInRightOrder(leftPacket, rightPacket) {
 			pairNumber := (i / 3) + 1
 			sum += pairNumber
 		}
@@ -20,7 +20,7 @@ func solvePart1(packets []string) (sum int) {
 	return sum
 }
 
-func isRightOrder(left, right string) bool {
+func isInRightOrder(left, right string) bool {
 	for {
 		if len(left) == 0 {
 			return true
@@ -29,34 +29,45 @@ func isRightOrder(left, right string) bool {
 			return false
 		}
 
-		if left[0] == ']' && right[0] != ']' {
+		l := left[0]
+		r := right[0]
+		if l == ']' && r != ']' {
 			return true
 		}
-		if left[0] != ']' && right[0] == ']' {
+		if l != ']' && r == ']' {
 			return false
 		}
 
-		if areEqualNonDigits(left[0], right[0]) {
+		if areEqualNonDigits(l, r) {
 			left = left[1:]
 			right = right[1:]
-		} else if IsDigit(left[0]) && IsDigit(right[0]) {
-			leftNumber, leftLength := getFirtNumber(left)
-			rightNumber, rightLength := getFirtNumber(right)
+			continue
+		}
+
+		if IsDigit(l) && IsDigit(r) {
+			leftNumber, leftNumberLength := getFirtNumber(left)
+			rightNumber, rightNumberLength := getFirtNumber(right)
 			if leftNumber < rightNumber {
 				return true
 			}
 			if leftNumber > rightNumber {
 				return false
 			}
-			left = left[leftLength:]
-			right = right[rightLength:]
-		} else if IsDigit(left[0]) && right[0] == '[' {
-			left = warpFirstNumberInBrackets(left)
-		} else if left[0] == '[' && IsDigit(right[0]) {
-			right = warpFirstNumberInBrackets(right)
-		} else {
-			panic(left + " | " + right)
+			left = left[leftNumberLength:]
+			right = right[rightNumberLength:]
+			continue
 		}
+
+		if IsDigit(l) && r == '[' {
+			left = warpFirstNumberInBrackets(left)
+			continue
+		}
+		if l == '[' && IsDigit(r) {
+			right = warpFirstNumberInBrackets(right)
+			continue
+		}
+
+		panic(left + " | " + right)
 	}
 }
 
@@ -77,13 +88,6 @@ func getFirtNumber(s string) (firstNumber, numberLength int) {
 	return firstNumber, numberLength
 }
 
-func IsDigit(r byte) bool {
-	return '0' <= r && r <= '9'
-}
-
-func parse(lines []string) (packets []string) {
-	for _, line := range lines {
-		packets = append(packets, line)
-	}
-	return packets
+func IsDigit(d byte) bool {
+	return '0' <= d && d <= '9'
 }
