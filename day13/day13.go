@@ -5,19 +5,34 @@ import (
 )
 
 func Solve(lines []string) (part1, part2 int) {
-	return solvePart1(lines), 0
+	packets := parse(lines)
+	return solvePart1(packets), solvePart2(packets)
 }
 
-func solvePart1(lines []string) (sum int) {
-	for i := 0; i < len(lines); i += 3 {
-		leftPacket := lines[i]
-		rightPacket := lines[i+1]
+func solvePart1(packets []string) (sum int) {
+	for i := 0; i < len(packets); i += 2 {
+		leftPacket := packets[i]
+		rightPacket := packets[i+1]
 		if isInRightOrder(leftPacket, rightPacket) {
-			pairNumber := (i / 3) + 1
+			pairNumber := (i / 2) + 1
 			sum += pairNumber
 		}
 	}
 	return sum
+}
+
+func solvePart2(packets []string) int {
+	smallerThan2 := 1
+	smallerThan6 := 2
+	for _, packet := range packets {
+		if isInRightOrder(packet, "[[2]]") {
+			smallerThan2++
+			smallerThan6++
+		} else if isInRightOrder(packet, "[[6]]") {
+			smallerThan6++
+		}
+	}
+	return smallerThan2 * smallerThan6
 }
 
 func isInRightOrder(left, right string) bool {
@@ -90,4 +105,13 @@ func getFirtNumber(s string) (firstNumber, numberLength int) {
 
 func IsDigit(d byte) bool {
 	return '0' <= d && d <= '9'
+}
+
+func parse(lines []string) (packets []string) {
+	for _, line := range lines {
+		if line != "" {
+			packets = append(packets, line)
+		}
+	}
+	return packets
 }

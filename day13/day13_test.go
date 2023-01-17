@@ -23,11 +23,11 @@ func TestIsDigit(t *testing.T) {
 func TestSolve(t *testing.T) {
 	resultPart1, resultPart2 := day13.Solve(reader.ReadExampleInput(13))
 	assert.Equal(t, 13, resultPart1)
-	assert.Equal(t, 0, resultPart2)
+	assert.Equal(t, 140, resultPart2)
 }
 
 func TestSolveRealInput(t *testing.T) {
 	resultPart1, resultPart2 := day13.Solve(reader.ReadInput(13))
 	assert.Equal(t, 5760, resultPart1)
-	assert.Equal(t, 0, resultPart2)
+	assert.Equal(t, 26670, resultPart2)
 }
