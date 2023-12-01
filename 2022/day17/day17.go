@@ -2,64 +2,66 @@ package day17
 
 import (
 	"fmt"
-	"math"
 	"strings"
 )
 
-const maxLength = 7
+const (
+	maxLength       = 7
+	loopStartOffset = 2000
+	minLoopLength   = 100
+)
 
 var jetIndex int
 
-func Solve(lines []string) (part1, part2 int64) {
-	// return solvePart1(lines[0], 2022), solvePart1(lines[0], 1000000000000)
-	return solvePart1(lines[0], 2022), solvePart1(lines[0], 1000000000000)
+func Solve(lines []string) (part1, part2 int) {
+	return calculateRockTowerHeight(lines[0], 2022), calculateRockTowerHeight(lines[0], 1000000000000)
 }
 
-func solvePart1(jetInput string, rounds int64) (score int64) {
+func calculateRockTowerHeight(jetInput string, rounds int) (score int) {
 	var chamber []string
 	jetIndex = 0
 	rocks := getDefaultRocks()
-	score = 0
-	var oldHeight int64
-	oldHeight = 0
+	rockCount := len(rocks)
+	oldHeight := 0
 	var loop []int
 
-	for i := int64(0); i < rounds; i++ {
-		if i%5 == 1 {
-			oldHeight = score + int64(len(chamber))
+	for i := 0; i < rounds; i++ {
+		if i%rockCount == 1 {
+			oldHeight = score + len(chamber)
 		}
 
-		chamber = simulateRock(chamber, jetInput, rocks[i%5])
+		chamber = simulateRock(chamber, jetInput, rocks[i%rockCount])
+		chamber, score = trimChamber(chamber, score)
 
-		if len(chamber) > 200 {
-			chamber = chamber[150:]
-			score += 150
+		if i > loopStartOffset && i%rockCount == 0 {
+			delta := score + len(chamber) - oldHeight
+			loop = append(loop, delta)
 		}
-
-		if i > 2000 && i%5 == 0 {
-			delta := score + int64(len(chamber)) - oldHeight
-			loop = append(loop, int(delta))
-		}
-		// 2000 + Min loop length
-		if i > 2100 && i%10 == 0 {
+		if i > loopStartOffset+minLoopLength && i%(2*rockCount) == 0 {
 			if isRepeating(loop) {
 				loopDelta := 0
 				for _, v := range loop {
 					loopDelta += v
 				}
-				x := (rounds - i) / int64(len(loop)*5)
-				score += (int64(x) * int64(loopDelta))
-				i += x * int64(len(loop)) * 5
+				x := (rounds - i) / (len(loop) * 5)
+				score += x * loopDelta
+				i += x * len(loop) * 5
 				fmt.Println(i)
 			}
 		}
 	}
-	return int64(len(chamber)) + score
+	return score + len(chamber)
+}
+
+func trimChamber(chamber []string, score int) ([]string, int) {
+	if len(chamber) > 200 {
+		return chamber[150:], score + 150
+	}
+	return chamber, score
 }
 
 func isRepeating(list []int) bool {
 	if len(list)%2 != 0 {
-		panic("nu")
 		return false
 	}
 	mid := len(list) / 2
@@ -69,58 +71,6 @@ func isRepeating(list []int) bool {
 		}
 	}
 	return true
-}
-
-func tetris(chamber []string) ([]string, int) {
-	maxY := 0
-	for y, line := range chamber {
-		if line == "#######" {
-			maxY = y
-		}
-	}
-	return chamber[maxY:], maxY
-}
-
-func removeBlockedLines(chamber []string) ([]string, int) {
-	for y := range chamber {
-		pos := canNotSeeSky(chamber, y)
-		if pos != -1 {
-			return chamber[pos:], pos
-		}
-	}
-	return chamber, 0
-}
-
-func canNotSeeSky(chamber []string, startY int) int {
-	var levels []int
-	for x := 0; x < maxLength; x++ {
-		b := blocked(chamber, startY, x)
-		if b != -1 {
-			levels = append(levels, b)
-		}
-	}
-
-	lowest := math.MaxInt
-	for _, y := range levels {
-		if y == -1 {
-			return -1
-		}
-		if y < lowest {
-			lowest = y
-		}
-	}
-	return lowest
-}
-
-func blocked(chamber []string, startY, startX int) int {
-	for y := startY; y < len(chamber); y++ {
-		if chamber[startY][startX] == '#' {
-			if chamber[y][startX] == '#' {
-				return y
-			}
-		}
-	}
-	return -1
 }
 
 func simulateRock(chamber []string, jetInput string, rock []string) []string {
