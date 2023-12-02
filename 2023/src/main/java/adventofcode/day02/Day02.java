@@ -20,26 +20,18 @@ public class Day02 extends AbstractDay {
 
     @Override
     public int solvePart1(String input) {
-        int sum = 0;
-        List<Game> gameList = parseGames(input);
-        for (int i = 0; i < gameList.size(); i++) {
-            if (gameList.get(i).isPossible()) {
-                sum += i + 1;
-            }
-        }
-        return sum;
+        return parseGames(input).stream().filter(Game::isPossible).mapToInt(Game::id).sum();
     }
 
     @Override
     public int solvePart2(String input) {
-        int sum = 0;
-        List<Game> gameList = parseGames(input);
-        for (Game game : gameList) {
-            sum += game.rounds.stream().mapToInt(Round::red).max().orElse(1)
-                    * game.rounds.stream().mapToInt(Round::green).max().orElse(1)
-                    * game.rounds.stream().mapToInt(Round::blue).max().orElse(1);
-        }
-        return sum;
+        return parseGames(input).stream().mapToInt(this::calculateGameScore).sum();
+    }
+
+    private int calculateGameScore(Game game) {
+        return game.rounds.stream().mapToInt(Round::red).max().orElse(1)
+                * game.rounds.stream().mapToInt(Round::green).max().orElse(1)
+                * game.rounds.stream().mapToInt(Round::blue).max().orElse(1);
     }
 
     private List<Game> parseGames(String input) {
@@ -60,8 +52,7 @@ public class Day02 extends AbstractDay {
     }
 
     private int getCount(String color, String round) {
-        Pattern compile = Pattern.compile("(\\d+) " + color);
-        Matcher matcher = compile.matcher(round);
+        Matcher matcher = Pattern.compile("(\\d+) " + color).matcher(round);
         if (matcher.find()) {
             return Integer.parseInt(matcher.group(1));
         }
