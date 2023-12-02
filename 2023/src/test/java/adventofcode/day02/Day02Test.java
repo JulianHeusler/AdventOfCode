@@ -37,6 +37,11 @@ class Day02Test {
                 Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
                           """;
 
-        assertEquals(8, day.solvePart2(testInput));
+        assertEquals(2286, day.solvePart2(testInput));
+    }
+
+    @Test
+    void testRealInputPart2() {
+        assertEquals(63700, day.solvePart2(Parser.readInputFile(2)));
     }
 }

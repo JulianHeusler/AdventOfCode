@@ -32,7 +32,14 @@ public class Day02 extends AbstractDay {
 
     @Override
     public int solvePart2(String input) {
-        return 0;
+        int sum = 0;
+        List<Game> gameList = parseGames(input);
+        for (Game game : gameList) {
+            sum += game.rounds.stream().mapToInt(Round::red).max().orElse(1)
+                    * game.rounds.stream().mapToInt(Round::green).max().orElse(1)
+                    * game.rounds.stream().mapToInt(Round::blue).max().orElse(1);
+        }
+        return sum;
     }
 
     private List<Game> parseGames(String input) {
