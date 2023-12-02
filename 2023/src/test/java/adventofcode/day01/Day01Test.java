@@ -28,7 +28,7 @@ class Day01Test {
 
     @Test
     void testInputPart2() {
-        assertEquals(281, day01.solvePart1(
+        assertEquals(281, day01.solvePart2(
                 """
                         two1nine
                         eightwothree
@@ -42,6 +42,6 @@ class Day01Test {
 
     @Test
     void testRealInputPart2() {
-        assertEquals(55607, day01.solvePart1(Parser.readInputFile(1)));
+        assertEquals(55291, day01.solvePart2(Parser.readInputFile(1)));
     }
 }
