@@ -1,3 +1,5 @@
+package adventofcode.day01;
+
 import java.io.File;
 import java.util.Scanner;
 
@@ -31,7 +33,7 @@ public class Day01 {
     private static String parse() {
         String input = "";
         try {
-            File file = new File("2023/day01/input.txt");
+            File file = new File("src/main/resources/day01/input.txt");
             Scanner scanner = new Scanner(file);
             while (scanner.hasNextLine()) {
                 input += scanner.nextLine() + "\n";
