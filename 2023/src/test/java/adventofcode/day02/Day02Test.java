@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class Day02Test {
     private final AbstractDay day = new Day02();
+    private static final int DAY_NUMBER = 2;
 
     @Test
     void testInputPart1() {
@@ -24,7 +25,7 @@ class Day02Test {
 
     @Test
     void testRealInputPart1() {
-        assertEquals(2176, day.solvePart1(Parser.readInputFile(2)));
+        assertEquals(2176, day.solvePart1(Parser.readInputFile(DAY_NUMBER)));
     }
 
     @Test
