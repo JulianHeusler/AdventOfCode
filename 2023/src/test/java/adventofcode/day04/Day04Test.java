@@ -45,7 +45,7 @@ class Day04Test {
 
     @Test
     void testRealInputPart2() {
-        assertEquals(0, day.solvePart2(Parser.readInputFile(DAY_NUMBER)));
+        assertEquals(5554894, day.solvePart2(Parser.readInputFile(DAY_NUMBER)));
     }
 
 }

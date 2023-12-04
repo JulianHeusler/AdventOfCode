@@ -33,23 +33,33 @@ public class Day04 extends AbstractDay {
     @Override
     public int solvePart2(String input) {
         List<Card> originalCards = parseCards(input);
-        return foo(originalCards, List.copyOf(originalCards), 0);
+        return solveScratchCards((originalCards), 0);
     }
 
-    private int foo(List<Card> currentCards, final List<Card> originalCards, final int count) {
-        if (currentCards.isEmpty()) {
+    private int solveScratchCards(final List<Card> cardsToScratch, final int count) {
+        if (cardsToScratch.isEmpty()) {
             return count;
         }
 
-        Card first = currentCards.getFirst();
-        currentCards.removeFirst();
+        Card currentCard = cardsToScratch.getFirst();
+        int currentCardAmount = (int) cardsToScratch.stream()
+                .filter(card -> card.id() == currentCard.id())
+                .count();
+        cardsToScratch.removeIf(card -> card.id() == currentCard.id());
 
-        for (int i = 0; i < countMatchingNumbers(first); i++) {
-            currentCards.addLast(originalCards.get(first.id() + i));
+        for (int i = 1; i <= countMatchingNumbers(currentCard); i++) {
+            int wonCardId = currentCard.id() + i;
+            Card wonCard = cardsToScratch.stream()
+                    .filter(card -> card.id() == wonCardId)
+                    .findFirst()
+                    .orElseThrow();
+            for (int j = 0; j < currentCardAmount; j++) {
+                cardsToScratch.add(wonCard);
+            }
         }
-
-        return foo(currentCards, originalCards, count + 1);
+        return solveScratchCards(cardsToScratch, count + currentCardAmount);
     }
+
 
     private List<Card> parseCards(String input) {
         List<Card> cards = new ArrayList<>();
