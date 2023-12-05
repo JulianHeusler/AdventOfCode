@@ -1,84 +1,100 @@
 package adventofcode.day05;
 
+import adventofcode.util.AbstractDay;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import adventofcode.util.AbstractDay;
 
 public class Day05 extends AbstractDay {
 
 
-	record Map(String title, List<Range> ranges) {
-	}
+    record Map(String title, List<Range> ranges) {
+    }
 
-	record Range(int destinationRangeStart, int sourceRangeStart, int length) {
-	}
+    record Range(Long destinationRangeStart, Long sourceRangeStart, Long length) {
+        boolean contains(Long l) {
+            return sourceRangeStart <= l && l <= sourceRangeStart + length;
+        }
 
-	@Override
-	public int solvePart1(String input) {
-		parseInput(input);
-		return 0;
-	}
+//        boolean overlaps(Range other) {
+//            return IntStream.range(sourceRangeStart, sourceRangeStart + length).anyMatch(other::contains);
+//        }
+    }
 
-	@Override
-	public int solvePart2(String input) {
-		return 0;
-	}
+    @Override
+    public int solvePart1(String input) {
+        return (int) parseInput(input).stream().mapToLong(Long::longValue).min().orElseThrow();
+    }
 
-
-	private List<Map> parseInput(String input) {
-		String[] split = input.split("\n");
-		List<Integer> seeds = parseNumbers(split[0]);
-
-		List<Map> maps = getMaps(Arrays.copyOfRange(split, 2, split.length));
-
-		for (Integer seed : seeds) {
-			for (Map map : maps) {
-				Optional<Range> first = map.ranges.stream().filter(range -> isInDest(seed, range)).findFirst();
-
-			}
-		}
-
-		return maps;
-	}
+    @Override
+    public int solvePart2(String input) {
+        return 0;
+    }
 
 
-	private boolean isInDest(int seed, Range range) {
-		return range.destinationRangeStart <= seed && seed <= range.destinationRangeStart + range.length;
-	}
+    private List<Long> parseInput(String input) {
+        String[] split = input.split("\n");
+        List<Long> seeds = parseNumbers(split[0]);
 
-	private List<Map> getMaps(String[] lines) {
-		List<Map> maps = new ArrayList<>();
+        List<Map> maps = getMaps(Arrays.copyOfRange(split, 2, split.length));
 
-		List<Range> ranges = new ArrayList<>();
-		String lastTitle = "";
-		for (String line : lines) {
-			if (line.equals("")) {
-				maps.add(new Map(lastTitle, ranges));
-				ranges = new ArrayList<>();
-			} else if (line.contains("map")) {
-				lastTitle = line;
-			} else {
-				List<Integer> lineNumbers = parseNumbers(line);
-				ranges.add(new Range(lineNumbers.get(0), lineNumbers.get(1), lineNumbers.get(2)));
-			}
-		}
+        List<Long> result = new ArrayList<>();
 
-		maps.add(new Map(lastTitle, ranges));
+        for (Long seed : seeds) {
+            System.out.println("seed:" + seed);
+            result.add(getLocation(seed, maps));
+        }
 
-		return maps;
-	}
+        return result;
+    }
 
-	private List<Integer> parseNumbers(String numberLine) {
-		List<Integer> numbers = new ArrayList<>();
-		Matcher matcher = Pattern.compile("(\\d+)").matcher(numberLine);
-		while (matcher.find()) {
-			numbers.add(Integer.parseInt(matcher.group()));
-		}
-		return numbers;
-	}
+    private Long getLocation(Long seed, List<Map> maps) {
+        Long next = seed;
+        for (Map map : maps) {
+            Long current = next;
+            next = map.ranges.stream().filter(range -> range.contains(current))
+                    .map(range -> resolve(range, current)).findFirst().orElse(current);
+            System.out.println(next);
+        }
+        return next;
+    }
+
+    private Long resolve(Range range, Long current) {
+        Long offset = range.destinationRangeStart - range.sourceRangeStart;
+        return current + offset;
+    }
+
+
+    private List<Map> getMaps(String[] lines) {
+        List<Map> maps = new ArrayList<>();
+
+        List<Range> ranges = new ArrayList<>();
+        String lastTitle = "";
+        for (String line : lines) {
+            if (line.isEmpty()) {
+                maps.add(new Map(lastTitle, ranges));
+                ranges = new ArrayList<>();
+            } else if (line.contains("map")) {
+                lastTitle = line;
+            } else {
+                List<Long> lineNumbers = parseNumbers(line);
+                ranges.add(new Range(lineNumbers.get(0), lineNumbers.get(1), lineNumbers.get(2)));
+            }
+        }
+
+        maps.add(new Map(lastTitle, ranges));
+        return maps;
+    }
+
+    private List<Long> parseNumbers(String numberLine) {
+        List<Long> numbers = new ArrayList<>();
+        Matcher matcher = Pattern.compile("(\\d+)").matcher(numberLine);
+        while (matcher.find()) {
+            numbers.add(Long.parseLong(matcher.group()));
+        }
+        return numbers;
+    }
 }
