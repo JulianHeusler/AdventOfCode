@@ -1,7 +1,7 @@
 package adventofcode.day03;
 
 import adventofcode.util.AbstractDay;
-import adventofcode.util.Parser;
+import adventofcode.util.ParseUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,7 +41,7 @@ class Day03Test {
 
     @Test
     void testRealInputPart1() {
-        assertEquals(514969, day.solvePart1(Parser.readInputFile(DAY_NUMBER)));
+        assertEquals(514969, day.solvePart1(ParseUtil.readInputFile(DAY_NUMBER)));
     }
 
     @Test
@@ -149,6 +149,6 @@ class Day03Test {
 
     @Test
     void testRealInputPart2() {
-        assertEquals(78915902, day.solvePart2(Parser.readInputFile(DAY_NUMBER)));
+        assertEquals(78915902, day.solvePart2(ParseUtil.readInputFile(DAY_NUMBER)));
     }
 }
