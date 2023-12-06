@@ -19,9 +19,9 @@ public class Day05 extends AbstractDay {
             return sourceRangeStart <= l && l <= sourceRangeStart + length;
         }
 
-//        boolean overlaps(Range other) {
-//            return IntStream.range(sourceRangeStart, sourceRangeStart + length).anyMatch(other::contains);
-//        }
+        boolean notOverlaps(Long start, Long range) {
+            return (start + range) < sourceRangeStart || (sourceRangeStart + length) < start;
+        }
     }
 
     @Override
@@ -31,9 +31,24 @@ public class Day05 extends AbstractDay {
 
     @Override
     public int solvePart2(String input) {
-        return 0;
+        return (int) part2(input).stream().mapToLong(Long::longValue).min().orElseThrow();
     }
 
+
+    private List<Long> part2(String input) {
+        String[] split = input.split("\n");
+        List<Long> seeds = parseNumbers(split[0]);
+        List<Map> maps = getMaps(Arrays.copyOfRange(split, 2, split.length));
+        List<Long> result = new ArrayList<>();
+
+        for (int i = 0; i < seeds.size(); i = i + 2) {
+            for (long seed = seeds.get(i); seed < seeds.get(i) + seeds.get(i + 1); seed++) {
+                System.out.println("seed:" + seed);
+                result.add(getLocation(seed, maps));
+            }
+        }
+        return result;
+    }
 
     private List<Long> parseInput(String input) {
         String[] split = input.split("\n");
