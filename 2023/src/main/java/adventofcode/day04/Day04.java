@@ -1,11 +1,10 @@
 package adventofcode.day04;
 
 import adventofcode.util.AbstractDay;
+import adventofcode.util.ParseUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Day04 extends AbstractDay {
     record Card(int id, List<Integer> winningNumbers, List<Integer> yourNumbers) {}
@@ -67,17 +66,8 @@ public class Day04 extends AbstractDay {
         for (String line : input.split("\n")) {
             String substringCard = line.substring(line.indexOf(":") + 2);
             String[] splitNumberLines = substringCard.split(" \\| ");
-            cards.add(new Card(id++, parseNumbers(splitNumberLines[0]), parseNumbers(splitNumberLines[1])));
+            cards.add(new Card(id++, ParseUtil.parseIntegerNumbers(splitNumberLines[0]), ParseUtil.parseIntegerNumbers(splitNumberLines[1])));
         }
         return cards;
-    }
-
-    private List<Integer> parseNumbers(String numberLine) {
-        List<Integer> numbers = new ArrayList<>();
-        Matcher matcher = Pattern.compile("(\\d+)").matcher(numberLine);
-        while (matcher.find()) {
-            numbers.add(Integer.parseInt(matcher.group()));
-        }
-        return numbers;
     }
 }

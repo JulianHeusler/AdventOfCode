@@ -1,12 +1,11 @@
 package adventofcode.day05;
 
 import adventofcode.util.AbstractDay;
+import adventofcode.util.ParseUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Day05 extends AbstractDay {
 
@@ -37,7 +36,7 @@ public class Day05 extends AbstractDay {
 
     private List<Long> part2(String input) {
         String[] split = input.split("\n");
-        List<Long> seeds = parseNumbers(split[0]);
+        List<Long> seeds = ParseUtil.parseLongNumbers(split[0]);
         List<Map> maps = getMaps(Arrays.copyOfRange(split, 2, split.length));
         List<Long> result = new ArrayList<>();
 
@@ -52,7 +51,7 @@ public class Day05 extends AbstractDay {
 
     private List<Long> parseInput(String input) {
         String[] split = input.split("\n");
-        List<Long> seeds = parseNumbers(split[0]);
+        List<Long> seeds = ParseUtil.parseLongNumbers(split[0]);
 
         List<Map> maps = getMaps(Arrays.copyOfRange(split, 2, split.length));
 
@@ -95,21 +94,12 @@ public class Day05 extends AbstractDay {
             } else if (line.contains("map")) {
                 lastTitle = line;
             } else {
-                List<Long> lineNumbers = parseNumbers(line);
+                List<Long> lineNumbers = ParseUtil.parseLongNumbers(line);
                 ranges.add(new Range(lineNumbers.get(0), lineNumbers.get(1), lineNumbers.get(2)));
             }
         }
 
         maps.add(new Map(lastTitle, ranges));
         return maps;
-    }
-
-    private List<Long> parseNumbers(String numberLine) {
-        List<Long> numbers = new ArrayList<>();
-        Matcher matcher = Pattern.compile("(\\d+)").matcher(numberLine);
-        while (matcher.find()) {
-            numbers.add(Long.parseLong(matcher.group()));
-        }
-        return numbers;
     }
 }
