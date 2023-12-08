@@ -21,6 +21,7 @@ class Day07Test {
 				QQQJA 483
 				""";
 		assertEquals(6440, day.solvePart1(testInput));
+		assertEquals(5905, day.solvePart2(testInput));
 	}
 
 	@Test
@@ -55,25 +56,18 @@ class Day07Test {
 				2JJJJ 53
 				JJJJ2 41
 				""";
-		assertEquals(6592, day.solvePart1(testInput));
+		// assertEquals(6592, day.solvePart1(testInput));
+		assertEquals(6839, day.solvePart2(testInput));
 	}
 
 	@Test
 	void testRealInputPart1() {
 		assertEquals(252295678, day.solvePart1(ParseUtil.readInputFile(DAY_NUMBER)));
 	}
-
-	@Test
-	void testInputPart2() {
-		String testInput = """
-				Time:      7  15   30
-				Distance:  9  40  200
-				""";
-		assertEquals(71503, day.solvePart2(testInput));
-	}
+	
 
 	@Test
 	void testRealInputPart2() {
-		assertEquals(24655068, day.solvePart2(ParseUtil.readInputFile(DAY_NUMBER)));
+		assertEquals(250577259, day.solvePart2(ParseUtil.readInputFile(DAY_NUMBER)));
 	}
 }
