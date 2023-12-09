@@ -25,4 +25,19 @@ class Day09Test {
         assertEquals(2008960228, day.solvePart1(ParseUtil.readInputFile(DAY_NUMBER)));
     }
 
+    @Test
+    void testInputPart2() {
+        String testInput = """
+                0 3 6 9 12 15
+                1 3 6 10 15 21
+                10 13 16 21 30 45
+                """;
+        assertEquals(2, day.solvePart2(testInput));
+    }
+
+    @Test
+    void testRealInputPart2() {
+        assertEquals(1097, day.solvePart2(ParseUtil.readInputFile(DAY_NUMBER)));
+    }
+
 }

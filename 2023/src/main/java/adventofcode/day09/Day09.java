@@ -13,24 +13,35 @@ public class Day09 extends AbstractDay {
     @Override
     public int solvePart1(String input) {
         return parseHistories(input).stream()
-                .map(this::predictNextValue)
+                .map(this::predictNextFutureValue)
                 .mapToInt(Integer::intValue)
                 .sum();
     }
 
     @Override
     public int solvePart2(String input) {
-        return 0;
-    }
-
-    private int predictNextValue(List<Integer> history) {
-        List<List<Integer>> sequences = getSequences(history);
-        sequences.forEach(System.out::println);
-        return sequences.reversed()
-                .stream()
-                .map(List::getLast)
+        return parseHistories(input).stream()
+                .map(this::predictNextPastValue)
                 .mapToInt(Integer::intValue)
                 .sum();
+    }
+
+    private int predictNextFutureValue(List<Integer> history) {
+        return getSequences(history)
+                .reversed()
+                .stream()
+                .map(List::getLast)
+                .reduce(Integer::sum)
+                .orElseThrow();
+    }
+
+    private int predictNextPastValue(List<Integer> history) {
+        return getSequences(history).reversed()
+                .stream()
+                .map(List::getFirst)
+                .mapToInt(Integer::intValue)
+                .reduce((a, b) -> b - a)
+                .orElseThrow();
     }
 
     private List<List<Integer>> getSequences(List<Integer> history) {
@@ -40,6 +51,7 @@ public class Day09 extends AbstractDay {
             sequences.add(nextSequence);
             nextSequence = getSequence(nextSequence);
         }
+        sequences.forEach(System.out::println);
         return sequences;
     }
 
