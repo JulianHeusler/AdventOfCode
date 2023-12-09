@@ -27,7 +27,7 @@ public final class ParseUtil {
 
     public static List<Long> parseLongNumbers(String numberLine) {
         List<Long> numbers = new ArrayList<>();
-        Matcher matcher = Pattern.compile("(\\d+)").matcher(numberLine);
+        Matcher matcher = Pattern.compile("(-*\\d+)").matcher(numberLine);
         while (matcher.find()) {
             numbers.add(Long.parseLong(matcher.group()));
         }
@@ -36,7 +36,7 @@ public final class ParseUtil {
 
     public static List<Integer> parseIntegerNumbers(String numberLine) {
         List<Integer> numbers = new ArrayList<>();
-        Matcher matcher = Pattern.compile("(\\d+)").matcher(numberLine);
+        Matcher matcher = Pattern.compile("(-*\\d+)").matcher(numberLine);
         while (matcher.find()) {
             numbers.add(Integer.parseInt(matcher.group()));
         }
