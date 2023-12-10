@@ -2,7 +2,9 @@ package adventofcode.day08;
 
 import adventofcode.util.AbstractDay;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,7 +37,41 @@ public class Day08 extends AbstractDay {
 
     @Override
     public int solvePart2(String input) {
-        return 0;
+        String directions = input.substring(0, input.indexOf("\n"));
+        Map<String, Element> elements = parseElements(input);
+
+        int steps = 0;
+        List<Element> currentElements = getStartingElements(elements);
+        while (!currentElements.stream().map(Element::name).allMatch(s -> s.endsWith("Z"))) {
+            int direction = directions.chars().findFirst().orElseThrow();
+            String dir = Character.toString(direction);
+            directions = shiftStringLeft(directions);
+            steps++;
+
+            currentElements = simulateMove(elements, direction, currentElements);
+        }
+
+        return steps;
+    }
+
+    private List<Element> getStartingElements(Map<String, Element> elements) {
+        return elements.entrySet()
+                .stream()
+                .filter(entry -> entry.getKey().endsWith("A"))
+                .map(Map.Entry::getValue)
+                .toList();
+    }
+
+    private List<Element> simulateMove(final Map<String, Element> elementMap, int direction, List<Element> currentElements) {
+        List<Element> resultingElements = new ArrayList<>();
+        for (Element current : currentElements) {
+            if (direction == 'R') {
+                resultingElements.add(elementMap.get(current.right()));
+            } else {
+                resultingElements.add(elementMap.get(current.left()));
+            }
+        }
+        return resultingElements;
     }
 
     private String shiftStringLeft(String input) {

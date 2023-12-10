@@ -2,9 +2,7 @@ package adventofcode.day10;
 
 import adventofcode.util.AbstractDay;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class Day10 extends AbstractDay {
@@ -12,6 +10,14 @@ public class Day10 extends AbstractDay {
     record Position(int y, int x) {
         public Position add(int y, int x) {
             return new Position(this.y + y, this.x + x);
+        }
+
+        public Position add(Position position) {
+            return add(position.y, position.x);
+        }
+
+        public Position opposite() {
+            return new Position(-y, -x);
         }
 
         public boolean isPipe(char[][] map) {
@@ -143,7 +149,61 @@ public class Day10 extends AbstractDay {
 
     @Override
     public int solvePart2(String input) {
-        return 0;
+        char[][] map = parseMap(input);
+        Position startPosition = findStartPosition(map);
+        List<Position> loop = getLoop(map);
+
+        Set<Position> rightSide = new HashSet<>();
+        Set<Position> leftSide = new HashSet<>();
+
+        for (int i = 0; i < loop.size(); i++) {
+            Position currentPosition = loop.get(i);
+            int previous = i == 0 ? loop.size() - 1 : i - 1;
+            Position dir = getDir(currentPosition, loop.get(previous));
+
+            foo(map, loop, rightSide, currentPosition, dir);
+            foo(map, loop, leftSide, currentPosition, dir.opposite());
+        }
+
+        return rightSide.contains(startPosition) ? rightSide.size() : leftSide.size();
+    }
+
+    private void foo(char[][] map, List<Position> loop, Set<Position> side, Position current, Position direction) {
+        Position next = current.add(direction);
+        if (next.isInBounds(map) && !loop.contains(next) && !side.contains(next)) {
+            side.add(next);
+            foo(map, loop, side, next, direction);
+        }
+    }
+
+    private Position getDir(Position a, Position b) {
+        return b.add(-a.x, -a.y);
+    }
+
+    private List<Position> getLoop(char[][] map) {
+        Position startPosition = findStartPosition(map);
+        List<Position> loop = new ArrayList<>();
+        List<Position> currentPositions = new ArrayList<>(List.of(startPosition));
+
+        while (!currentPositions.isEmpty()) {
+            loop.addAll(currentPositions);
+
+            List<Position> nextPositions = new ArrayList<>();
+            for (Position currentPosition : currentPositions) {
+                List<Position> connectedPositions = getConnectedPositions(currentPosition, map).stream()
+                        .filter(p -> !p.equals(currentPosition))
+                        .filter(p -> p.isInBounds(map))
+                        .filter(p -> p.isPipe(map))
+                        .toList();
+                for (Position position : connectedPositions) {
+                    if (!loop.contains(position)) {
+                        nextPositions.add(position);
+                    }
+                }
+            }
+            currentPositions = nextPositions;
+        }
+        return loop;
     }
 
     private char[][] parseMap(String input) {
