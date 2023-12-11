@@ -29,7 +29,7 @@ class Day10Test {
     }
 
     @Test
-    void testInputPart12() {
+    void testInputPart1Additional() {
         assertEquals(8, day.solvePart1("""
                 ..F7.
                 .FJ|.
@@ -118,7 +118,7 @@ class Day10Test {
     }
 
     @Test
-    void testInputPart2dawdaw() {
+    void testInputPart2Simple() {
         assertEquals(1, day.solvePart2("""
                 .....
                 .....
@@ -131,6 +131,6 @@ class Day10Test {
 
     @Test
     void testRealInputPart2() {
-        assertEquals(0, day.solvePart2(ParseUtil.readInputFile(DAY_NUMBER)));
+        assertEquals(415, day.solvePart2(ParseUtil.readInputFile(DAY_NUMBER)));
     }
 }
