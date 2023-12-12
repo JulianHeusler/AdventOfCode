@@ -2,59 +2,62 @@ package adventofcode.day11;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 import adventofcode.util.AbstractDay;
 
 public class Day11 extends AbstractDay {
 
-	record Position(int y, int x) {
+	record Position(long y, long x) {
 	}
 
 	@Override
-	public int solvePart1(String input) {
+	public long solvePart1(String input) {
+		return sumLengthBetweenGalaxies(input, 2);
+	}
+
+	@Override
+	public long solvePart2(String input) {
+		return sumLengthBetweenGalaxies(input, 1000000);
+	}
+
+	private long sumLengthBetweenGalaxies(String input, int weight) {
 		List<Position> galaxies = getGalaxiesPositions(input);
 		List<Position> galaxiesCopy = new ArrayList<>(galaxies);
 
-		int lengths = 0;
+		long lengths = 0;
 		for (Position galaxy1 : galaxies) {
 			galaxiesCopy.remove(galaxy1);
 			for (Position galaxy2 : galaxiesCopy) {
-				lengths += calculateDistance(galaxy1, galaxy2, galaxies);
+				lengths += calculateDistance(galaxy1, galaxy2, galaxies, weight);
 			}
 		}
 		return lengths;
 	}
 
-	private int calculateDistance(Position a, Position b, List<Position> galaxies) {
-		int dx = Math.abs(a.x - b.x);
-		int dy = Math.abs(a.y - b.y);
 
-		long emptyColumns = IntStream.range(Math.min(a.x, b.x), Math.max(a.x, b.x))
+	private long calculateDistance(Position a, Position b, List<Position> galaxies, int weight) {
+		long dx = Math.abs(a.x - b.x);
+		long dy = Math.abs(a.y - b.y);
+
+		long emptyColumns = LongStream.range(Math.min(a.x, b.x), Math.max(a.x, b.x))
 				.filter(i -> isEmptyColumn(i, galaxies))
 				.count();
-
-		long emptyRows = IntStream.range(Math.min(a.y, b.y), Math.max(a.y, b.y))
+		long emptyRows = LongStream.range(Math.min(a.y, b.y), Math.max(a.y, b.y))
 				.filter(i -> isEmptyRow(i, galaxies))
 				.count();
 
-		int result = dx + dy + (int) emptyColumns + (int) emptyRows;
-		return result;
-	}
-
-	@Override
-	public int solvePart2(String input) {
-		return 0;
+		return dx + dy - emptyColumns + emptyColumns * weight - emptyRows + emptyRows * weight;
 	}
 
 
-	private static boolean isEmptyRow(int rowNumber, List<Position> galaxies) {
+	private static boolean isEmptyRow(long rowNumber, List<Position> galaxies) {
 		return galaxies.stream()
 				.map(Position::y)
 				.noneMatch(y -> y == rowNumber);
 	}
 
-	private static boolean isEmptyColumn(int columnNumber, List<Position> galaxies) {
+	private static boolean isEmptyColumn(long columnNumber, List<Position> galaxies) {
 		return galaxies.stream()
 				.map(Position::x)
 				.noneMatch(x -> x == columnNumber);
