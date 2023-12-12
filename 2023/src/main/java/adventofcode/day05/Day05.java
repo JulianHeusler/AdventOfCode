@@ -1,105 +1,103 @@
 package adventofcode.day05;
 
+import adventofcode.util.AbstractDay;
+import adventofcode.util.ParseUtil;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import adventofcode.util.AbstractDay;
-import adventofcode.util.ParseUtil;
-
 public class Day05 extends AbstractDay {
 
 
-	record Map(String title, List<Range> ranges) {
-	}
+    @Override
+    public long solvePart1(String input) {
+        return (int) parseInput(input).stream().mapToLong(Long::longValue).min().orElseThrow();
+    }
 
-	record Range(Long destinationRangeStart, Long sourceRangeStart, Long length) {
-		boolean contains(Long l) {
-			return sourceRangeStart <= l && l <= sourceRangeStart + length;
-		}
+    @Override
+    public long solvePart2(String input) {
+        return (int) part2(input).stream().mapToLong(Long::longValue).min().orElseThrow();
+    }
 
-		boolean notOverlaps(Long start, Long range) {
-			return (start + range) < sourceRangeStart || (sourceRangeStart + length) < start;
-		}
-	}
+    private List<Long> part2(String input) {
+        String[] split = input.split("\n");
+        List<Long> seeds = ParseUtil.parseLongNumbers(split[0]);
+        List<Map> maps = getMaps(Arrays.copyOfRange(split, 2, split.length));
+        List<Long> result = new ArrayList<>();
 
-	@Override
-	public long solvePart1(String input) {
-		return (int) parseInput(input).stream().mapToLong(Long::longValue).min().orElseThrow();
-	}
+        for (int i = 0; i < seeds.size(); i = i + 2) {
+            for (long seed = seeds.get(i); seed < seeds.get(i) + seeds.get(i + 1); seed++) {
+                System.out.println("seed:" + seed);
+                result.add(getLocation(seed, maps));
+            }
+        }
+        return result;
+    }
 
-	@Override
-	public long solvePart2(String input) {
-		return (int) part2(input).stream().mapToLong(Long::longValue).min().orElseThrow();
-	}
+    private List<Long> parseInput(String input) {
+        String[] split = input.split("\n");
+        List<Long> seeds = ParseUtil.parseLongNumbers(split[0]);
 
+        List<Map> maps = getMaps(Arrays.copyOfRange(split, 2, split.length));
 
-	private List<Long> part2(String input) {
-		String[] split = input.split("\n");
-		List<Long> seeds = ParseUtil.parseLongNumbers(split[0]);
-		List<Map> maps = getMaps(Arrays.copyOfRange(split, 2, split.length));
-		List<Long> result = new ArrayList<>();
+        List<Long> result = new ArrayList<>();
 
-		for (int i = 0; i < seeds.size(); i = i + 2) {
-			for (long seed = seeds.get(i); seed < seeds.get(i) + seeds.get(i + 1); seed++) {
-				System.out.println("seed:" + seed);
-				result.add(getLocation(seed, maps));
-			}
-		}
-		return result;
-	}
+        for (Long seed : seeds) {
+            System.out.println("seed:" + seed);
+            result.add(getLocation(seed, maps));
+        }
 
-	private List<Long> parseInput(String input) {
-		String[] split = input.split("\n");
-		List<Long> seeds = ParseUtil.parseLongNumbers(split[0]);
+        return result;
+    }
 
-		List<Map> maps = getMaps(Arrays.copyOfRange(split, 2, split.length));
+    private Long getLocation(Long seed, List<Map> maps) {
+        Long next = seed;
+        for (Map map : maps) {
+            Long current = next;
+            next = map.ranges.stream().filter(range -> range.contains(current))
+                    .map(range -> resolve(range, current)).findFirst().orElse(current);
+            System.out.println(next);
+        }
+        return next;
+    }
 
-		List<Long> result = new ArrayList<>();
+    private Long resolve(Range range, Long current) {
+        Long offset = range.destinationRangeStart - range.sourceRangeStart;
+        return current + offset;
+    }
 
-		for (Long seed : seeds) {
-			System.out.println("seed:" + seed);
-			result.add(getLocation(seed, maps));
-		}
+    private List<Map> getMaps(String[] lines) {
+        List<Map> maps = new ArrayList<>();
 
-		return result;
-	}
+        List<Range> ranges = new ArrayList<>();
+        String lastTitle = "";
+        for (String line : lines) {
+            if (line.isEmpty()) {
+                maps.add(new Map(lastTitle, ranges));
+                ranges = new ArrayList<>();
+            } else if (line.contains("map")) {
+                lastTitle = line;
+            } else {
+                List<Long> lineNumbers = ParseUtil.parseLongNumbers(line);
+                ranges.add(new Range(lineNumbers.get(0), lineNumbers.get(1), lineNumbers.get(2)));
+            }
+        }
 
-	private Long getLocation(Long seed, List<Map> maps) {
-		Long next = seed;
-		for (Map map : maps) {
-			Long current = next;
-			next = map.ranges.stream().filter(range -> range.contains(current))
-					.map(range -> resolve(range, current)).findFirst().orElse(current);
-			System.out.println(next);
-		}
-		return next;
-	}
+        maps.add(new Map(lastTitle, ranges));
+        return maps;
+    }
 
-	private Long resolve(Range range, Long current) {
-		Long offset = range.destinationRangeStart - range.sourceRangeStart;
-		return current + offset;
-	}
+    record Map(String title, List<Range> ranges) {
+    }
 
+    record Range(Long destinationRangeStart, Long sourceRangeStart, Long length) {
+        boolean contains(Long l) {
+            return sourceRangeStart <= l && l <= sourceRangeStart + length;
+        }
 
-	private List<Map> getMaps(String[] lines) {
-		List<Map> maps = new ArrayList<>();
-
-		List<Range> ranges = new ArrayList<>();
-		String lastTitle = "";
-		for (String line : lines) {
-			if (line.isEmpty()) {
-				maps.add(new Map(lastTitle, ranges));
-				ranges = new ArrayList<>();
-			} else if (line.contains("map")) {
-				lastTitle = line;
-			} else {
-				List<Long> lineNumbers = ParseUtil.parseLongNumbers(line);
-				ranges.add(new Range(lineNumbers.get(0), lineNumbers.get(1), lineNumbers.get(2)));
-			}
-		}
-
-		maps.add(new Map(lastTitle, ranges));
-		return maps;
-	}
+        boolean notOverlaps(Long start, Long range) {
+            return (start + range) < sourceRangeStart || (sourceRangeStart + length) < start;
+        }
+    }
 }

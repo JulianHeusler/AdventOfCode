@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class Day06Test {
-    private final AbstractDay day = new Day06();
     private static final int DAY_NUMBER = 6;
+    private final AbstractDay day = new Day06();
 
     @Test
     void testInputPart1() {
