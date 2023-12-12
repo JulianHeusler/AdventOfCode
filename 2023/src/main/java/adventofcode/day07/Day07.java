@@ -121,13 +121,13 @@ public class Day07 extends AbstractDay {
 	}
 
 	@Override
-	public int solvePart1(String input) {
+	public long solvePart1(String input) {
 		isPartTwo = false;
 		return calculateTotalWinnings(input);
 	}
 
 	@Override
-	public int solvePart2(String input) {
+	public long solvePart2(String input) {
 		isPartTwo = true;
 		return calculateTotalWinnings(input);
 	}
