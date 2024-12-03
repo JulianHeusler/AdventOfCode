@@ -26,7 +26,7 @@ class Day02Test {
 
 	@Test
 	void testRealInputPart1() {
-		assertEquals(0, day02.solvePart1(ParseUtil.readInputFile(1)));
+		assertEquals(252, day02.solvePart1(ParseUtil.readInputFile(2)));
 	}
 
 	@Test
@@ -45,6 +45,6 @@ class Day02Test {
 
 	@Test
 	void testRealInputPart2() {
-		assertEquals(0, day02.solvePart2(ParseUtil.readInputFile(1)));
+		assertEquals(0, day02.solvePart2(ParseUtil.readInputFile(2)));
 	}
 }
