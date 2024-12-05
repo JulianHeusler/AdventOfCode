@@ -147,12 +147,12 @@ public class Day04Test {
 				MXMXAXMASX
 				""";
 
-		assertEquals(0, day04.solvePart2(testInput));
+		assertEquals(9, day04.solvePart2(testInput));
 	}
 
 
 	@Test
 	void testRealInputPart2() {
-		assertEquals(0, day04.solvePart2(ParseUtil.readInputFile(4)));
+		assertEquals(1974, day04.solvePart2(ParseUtil.readInputFile(4)));
 	}
 }

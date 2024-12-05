@@ -1,17 +1,36 @@
 package adventofcode.day04;
 
+import java.util.List;
+
 import adventofcode.util.AbstractDay;
 
 public class Day04 extends AbstractDay {
 
+	private final List<char[][]> allowedConfigurations = List.of(
+			new char[][]{
+					{'M', '.', 'S'},
+					{'.', 'A', '.'},
+					{'M', '.', 'S'}
+			},
+			new char[][]{
+					{'M', '.', 'M'},
+					{'.', 'A', '.'},
+					{'S', '.', 'S'}
+			}, new char[][]{
+					{'S', '.', 'M'},
+					{'.', 'A', '.'},
+					{'S', '.', 'M'}
+			}, new char[][]{
+					{'S', '.', 'S'},
+					{'.', 'A', '.'},
+					{'M', '.', 'M'}
+			}
+	);
+
 	@Override
 	public long solvePart1(String input) {
 		long sum = 0;
-		String[] lines = input.split("\n");
-		char[][] map = new char[lines.length][];
-		for (int y = 0; y < lines.length; y++) {
-			map[y] = lines[y].toCharArray();
-		}
+		char[][] map = getMap(input);
 
 		for (int y = 0; y < map.length; y++) {
 			for (int x = 0; x < map[y].length; x++) {
@@ -35,6 +54,15 @@ public class Day04 extends AbstractDay {
 		}
 
 		return sum;
+	}
+
+	private static char[][] getMap(String input) {
+		String[] lines = input.split("\n");
+		char[][] map = new char[lines.length][];
+		for (int y = 0; y < lines.length; y++) {
+			map[y] = lines[y].toCharArray();
+		}
+		return map;
 	}
 
 	private boolean horizontalDown(int x, int y, char[][] map) {
@@ -97,6 +125,56 @@ public class Day04 extends AbstractDay {
 
 	@Override
 	public long solvePart2(String input) {
-		return 0;
+		long sum = 0;
+		char[][] map = getMap(input);
+		for (int y = 0; y < map.length; y++) {
+			for (int x = 0; x < map[y].length; x++) {
+				char current = map[y][x];
+				if (current == 'A') {
+					continue;
+				}
+
+				if (isValidXMasCross(x, y, map)) {
+					sum++;
+				}
+			}
+		}
+
+		return sum;
+	}
+
+	private boolean isValidXMasCross(int x, int y, char[][] map) {
+		if (!inBounds(x + 2, y + 2, map)) {
+			return false;
+		}
+
+		char[][] currentConfiguration = new char[3][3];
+		for (int i = 0; i < 3; i++) {
+			currentConfiguration[i][0] = map[y + i][x];
+			currentConfiguration[i][1] = map[y + i][x + 1];
+			currentConfiguration[i][2] = map[y + i][x + 2];
+		}
+
+		for (char[][] allowedConfiguration : allowedConfigurations) {
+			if (matches(currentConfiguration, allowedConfiguration)) {
+				// System.out.println(Arrays.deepToString(currentConfiguration));
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean matches(char[][] currentConfiguration, char[][] allowedConfiguration) {
+		for (int y = 0; y < currentConfiguration.length; y++) {
+			for (int x = 0; x < currentConfiguration[y].length; x++) {
+				if (allowedConfiguration[y][x] == '.') {
+					continue;
+				}
+				if (currentConfiguration[y][x] != allowedConfiguration[y][x]) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 }
