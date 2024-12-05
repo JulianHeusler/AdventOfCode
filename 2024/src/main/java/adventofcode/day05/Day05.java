@@ -1,6 +1,7 @@
 package adventofcode.day05;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import adventofcode.util.AbstractDay;
@@ -26,19 +27,51 @@ public class Day05 extends AbstractDay {
 	private boolean isValidOrder(Order order, List<Rule> rules) {
 		List<Rule> relevantRules = rules.stream().filter(rule -> order.pages().contains(rule.pageNumber) &&
 				order.pages().contains(rule.beforePageNumber)).toList();
-
 		for (Rule rule : relevantRules) {
 			if (!rule.satisfiesRules(order.pages)) {
 				return false;
 			}
 		}
-
 		return true;
 	}
 
 	@Override
 	public long solvePart2(String input) {
-		return 0;
+		String[] split = input.split("\n\n");
+		List<Rule> rules = parseRules(split[0]);
+		List<Order> orders = parseOrders(split[1]);
+
+		return orders.stream()
+				.filter(order -> !isValidOrder(order, rules))
+				.map(order -> sortOrder(order, rules).getMiddlePageNumber())
+				.mapToInt(Integer::intValue)
+				.sum();
+	}
+
+	private Order sortOrder(Order order, List<Rule> rules) {
+		List<Integer> sortedPages = new ArrayList<>();
+		sortedPages.addFirst(order.pages.getFirst());
+		for (int i = 1; i < order.pages().size(); i++) {
+			Integer nextPage = order.pages().get(i);
+			sortedPages = validRuleSort(rules, sortedPages, nextPage);
+		}
+		return new Order(sortedPages);
+	}
+
+	private List<Integer> validRuleSort(List<Rule> rules, List<Integer> pages, int page) {
+		for (int i = 0; i < pages.size() + 1; i++) {
+			List<Integer> candidate = insertNumberAt(pages, page, i);
+			if (isValidOrder(new Order(candidate), rules)) {
+				return candidate;
+			}
+		}
+		throw new IllegalStateException();
+	}
+
+	private List<Integer> insertNumberAt(List<Integer> integers, int number, int index) {
+		LinkedList<Integer> linkedList = new LinkedList<>(integers);
+		linkedList.add(index, number);
+		return linkedList;
 	}
 
 	private List<Order> parseOrders(String splitInput) {
