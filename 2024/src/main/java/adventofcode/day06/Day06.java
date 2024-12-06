@@ -1,5 +1,6 @@
 package adventofcode.day06;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -8,6 +9,10 @@ import adventofcode.util.AbstractDay;
 public class Day06 extends AbstractDay {
 
 	private record Vector(Position position, Direction direction) {
+		@Override
+		public String toString() {
+			return "Vector pos: %s dir: %s".formatted(position, direction);
+		}
 	}
 
 	private enum Direction {
@@ -21,28 +26,45 @@ public class Day06 extends AbstractDay {
 		private Position add(Position position) {
 			return new Position(x + position.x(), y + position.y());
 		}
+
+		@Override
+		public String toString() {
+			return "x:%s y:%s".formatted(x, y);
+		}
 	}
 
 	@Override
 	public long solvePart1(String input) {
 		char[][] map = parseMap(input);
-		Vector currentVector = new Vector(findStartPosition(map), Direction.UP);
+		Vector startVector = new Vector(findStartPosition(map), Direction.UP);
 
+		try {
+			return getVisitedPositions(startVector, map).size();
+		} catch (CircleException e) {
+			return 0;
+		}
+	}
+
+	private static Set<Vector> guardTurnPositions;
+
+	private Set<Position> getVisitedPositions(Vector currentVector, char[][] map) throws CircleException {
+		guardTurnPositions = new HashSet<>();
 		Set<Position> visitedPositions = new HashSet<>();
-
 		while (inBounds(currentVector.position(), map)) {
 			visitedPositions.add(currentVector.position());
 			currentVector = simulateMove(currentVector.position(), currentVector.direction(), map);
 		}
-
-		return visitedPositions.size();
+		return visitedPositions;
 	}
 
-	private Vector simulateMove(Position currentPosition, Direction currentDirection, char[][] map) {
+	private Vector simulateMove(Position currentPosition, Direction currentDirection, char[][] map)
+			throws CircleException {
 		Position nextPosition = move(currentPosition, currentDirection);
-
 		char symbol = getSymbol(nextPosition, map);
-		if (symbol == '#') {
+		if (symbol == '#' || symbol == 'O') {
+			if (!guardTurnPositions.add(new Vector(currentPosition, currentDirection))) {
+				throw new CircleException();
+			}
 			return simulateMove(currentPosition, rotate90(currentDirection), map);
 		}
 		return new Vector(nextPosition, currentDirection);
@@ -50,7 +72,33 @@ public class Day06 extends AbstractDay {
 
 	@Override
 	public long solvePart2(String input) {
-		return 0;
+		long circles = 0;
+
+		char[][] map = parseMap(input);
+		Vector startVector = new Vector(findStartPosition(map), Direction.UP);
+
+		Set<Position> visitedPositions = new HashSet<>();
+		try {
+			visitedPositions = getVisitedPositions(startVector, map);
+		} catch (CircleException ignored) {
+		}
+
+		for (Position visitedPosition : visitedPositions) {
+			try {
+				getVisitedPositions(startVector, placeObstacle(visitedPosition, map));
+			} catch (Exception exception) {
+				circles++;
+			}
+		}
+
+		return circles;
+	}
+
+	private char[][] placeObstacle(Position position, char[][] map) {
+		char[][] modifiedMap = Arrays.stream(map).map(char[]::clone).toArray(char[][]::new);
+		modifiedMap[position.y()][position.x()] = 'O';
+		System.out.println("Placed at: " + position);
+		return modifiedMap;
 	}
 
 	private Position findStartPosition(char[][] map) {

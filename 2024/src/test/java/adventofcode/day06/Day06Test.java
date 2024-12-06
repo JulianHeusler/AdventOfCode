@@ -47,12 +47,12 @@ public class Day06Test {
 				#.........
 				......#...
 				""";
-		assertEquals(0, day.solvePart2(testInput));
+		assertEquals(6, day.solvePart2(testInput));
 	}
 
 	@Test
 	void testRealInputPart2() {
-		assertEquals(0, day.solvePart2(ParseUtil.readInputFile(DAY_NUMBER)));
+		assertEquals(1933, day.solvePart2(ParseUtil.readInputFile(DAY_NUMBER)));
 	}
 
 }
