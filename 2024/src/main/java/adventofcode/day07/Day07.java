@@ -10,41 +10,58 @@ public class Day07 extends AbstractDay {
 
     private enum Operator {
         ADD,
-        MULTIPLY
-    }
+        MULTIPLY,
+        CONCATENATION;
 
-    private record Callibritation(long result, List<Long> numbers) {
+        private long apply(long firstNumber, long secondNumber) {
+            return switch (this) {
+                case ADD -> firstNumber + secondNumber;
+                case MULTIPLY -> firstNumber * secondNumber;
+                case CONCATENATION -> Long.valueOf(String.valueOf(firstNumber) + String.valueOf(secondNumber));
+            };
+        }
     }
 
     @Override
     public long solvePart1(String input) {
         long sum = 0;
-        for (Callibritation validCallibritation : parseCallibritations(input).stream()
-                .filter(this::isValid).toList()) {
-            sum += validCallibritation.result();
+        for (Callibritation callibritation : parseCallibritations(input)) {
+            if (isValid(callibritation, List.of(Operator.ADD, Operator.MULTIPLY))) {
+                sum += callibritation.result();
+            }
         }
         return sum;
     }
 
-    private boolean isValid(Callibritation callibritation) {
-        return testRecursive(removeFirst(callibritation.numbers()), callibritation.numbers().getFirst(),
-                callibritation.result());
+    private boolean isValid(Callibritation callibritation, List<Operator> operators) {
+        return testRecursive(callibritation.result(), operators, removeFirst(callibritation.numbers()),
+                callibritation.numbers().getFirst());
     }
 
-    private boolean testRecursive(List<Long> numbers, long current, long result) {
+    private boolean testRecursive(long result, List<Operator> operators, List<Long> numbers, long current) {
         if (numbers.isEmpty()) {
             return current == result;
         }
 
         if (current > result) {
-            // return false;
+            return false;
         }
 
-        long added = current + numbers.getFirst();
-        long multiplyed = current * numbers.getFirst();
+        return operators.stream()
+                .anyMatch(operator -> testRecursive(result, operators,
+                        removeFirst(numbers), operator.apply(current, numbers.getFirst())));
+    }
 
-        return testRecursive(numbers.subList(1, numbers.size()), added, result)
-                || testRecursive(numbers.subList(1, numbers.size()), multiplyed, result);
+    @Override
+    public long solvePart2(String input) {
+        long sum = 0;
+        for (Callibritation validCallibritation : parseCallibritations(input).stream()
+                .filter(callibritation -> isValid(callibritation,
+                        List.of(Operator.ADD, Operator.MULTIPLY, Operator.CONCATENATION)))
+                .toList()) {
+            sum += validCallibritation.result();
+        }
+        return sum;
     }
 
     private List<Long> removeFirst(List<Long> list) {
@@ -52,11 +69,6 @@ public class Day07 extends AbstractDay {
             return list;
         }
         return list.subList(1, list.size());
-    }
-
-    @Override
-    public long solvePart2(String input) {
-        return 0;
     }
 
     private List<Callibritation> parseCallibritations(String input) {
@@ -68,5 +80,8 @@ public class Day07 extends AbstractDay {
             callibritations.add(new Callibritation(result, numbers));
         }
         return callibritations;
+    }
+
+    private record Callibritation(long result, List<Long> numbers) {
     }
 }

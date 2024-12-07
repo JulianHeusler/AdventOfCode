@@ -81,11 +81,11 @@ public class Day07Test {
                 21037: 9 7 18 13
                 292: 11 6 16 20
                 """;
-        assertEquals(0, day.solvePart2(testInput));
+        assertEquals(11387, day.solvePart2(testInput));
     }
 
     @Test
     void testRealInputPart2() {
-        assertEquals(0, day.solvePart2(ParseUtil.readInputFile(DAY_NUMBER)));
+        assertEquals(337041851384440L, day.solvePart2(ParseUtil.readInputFile(DAY_NUMBER)));
     }
 }
